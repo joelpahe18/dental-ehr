@@ -18,6 +18,33 @@ export interface Patient {
   };
 }
 
+// ==========================================
+// MÓDULO DE AGENDA Y CITAS CLÍNICAS (BOXES)
+// ==========================================
+export type AppointmentStatus = 
+  | 'programada'
+  | 'confirmada_whatsapp'
+  | 'en_sala_espera'
+  | 'en_atencion'
+  | 'finalizada'
+  | 'no_asistio';
+
+export interface DentalAppointment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  especialista: string;
+  boxSillon: string; // ej. "Box 1 - Sillón Principal", "Box 2 - Cirugía"
+  fecha: string; // YYYY-MM-DD
+  horaInicio: string; // HH:mm
+  duracionMinutos: number;
+  motivoConsulta: string;
+  estado: AppointmentStatus;
+  origen: 'whatsapp_ia' | 'recepcion_presencial' | 'pagina_web';
+  notas?: string;
+}
+
 export interface MedicalBackground {
   hipertension: boolean;
   diabetes: boolean;
@@ -53,21 +80,14 @@ export interface OdontogramState {
 // ==========================================
 export interface ToothPerioMeasurement {
   dienteFdi: number;
-  // Sondaje Vestibular (3 puntos: Mesial, Centro, Distal) en mm
   sondajeVestibular: [number, number, number];
-  // Margen Gingival Vestibular (Recesión en mm)
   margenVestibular: [number, number, number];
-  // Sangrado al Sondaje Vestibular (BOP)
   sangradoVestibular: [boolean, boolean, boolean];
-
-  // Sondaje Lingual / Palatino (3 puntos: Mesial, Centro, Distal)
   sondajeLingual: [number, number, number];
   margenLingual: [number, number, number];
   sangradoLingual: [boolean, boolean, boolean];
-
-  // Parámetros por pieza
-  movilidad: 0 | 1 | 2 | 3; // Grado 0 a III
-  furca?: 0 | 1 | 2 | 3 | 4; // Grado I a IV en molares
+  movilidad: 0 | 1 | 2 | 3;
+  furca?: 0 | 1 | 2 | 3 | 4;
   placaBacteriana: boolean;
   ausente: boolean;
 }
@@ -76,8 +96,8 @@ export interface PeriodontogramState {
   patientId: string;
   fecha: string;
   periodoncista: string;
-  porcentajeSangradoBop: number; // Cálculo automático
-  sitiosConBolsaMayor4mm: number; // Cálculo automático
+  porcentajeSangradoBop: number;
+  sitiosConBolsaMayor4mm: number;
   measurements: Record<number, ToothPerioMeasurement>;
 }
 
@@ -91,9 +111,9 @@ export interface InformedConsent {
   contenidoTexto: string;
   riesgosInformados: string[];
   fechaHoraFirma: string;
-  firmaDigitalBase64: string; // Trazos de firma digital en canvas
+  firmaDigitalBase64: string;
   ipFirma?: string;
-  hashIntegridad: string; // Hash SHA-256 para validez probatoria
+  hashIntegridad: string;
 }
 
 export interface TreatmentPlanItem {

@@ -39,6 +39,44 @@ const patients = new Map([
         }
     ]
 ]);
+const appointments = new Map([
+    [
+        'apt-1',
+        {
+            id: 'apt-1',
+            patientId: '1',
+            patientName: 'Joel David Payares',
+            patientPhone: '+573001234567',
+            especialista: 'Dr. Alejandro Restrepo (Ortodoncista)',
+            boxSillon: 'Box 1 - Escáner 3D',
+            fecha: new Date().toISOString().split('T')[0],
+            horaInicio: '09:00',
+            duracionMinutos: 45,
+            motivoConsulta: 'Valoración Escaneo 3D para Alineadores',
+            estado: 'confirmada_whatsapp',
+            origen: 'whatsapp_ia',
+            notas: 'Cita agendada de forma autónoma por Sofía (Dental AI Agent)'
+        }
+    ],
+    [
+        'apt-2',
+        {
+            id: 'apt-2',
+            patientId: '2',
+            patientName: 'Mariana Gomez',
+            patientPhone: '+573119876543',
+            especialista: 'Dra. Claudia Mejía (Periodoncista)',
+            boxSillon: 'Box 2 - Quirófano Oral',
+            fecha: new Date().toISOString().split('T')[0],
+            horaInicio: '11:00',
+            duracionMinutos: 60,
+            motivoConsulta: 'Mantenimiento Periodontal y Sondaje',
+            estado: 'en_sala_espera',
+            origen: 'recepcion_presencial',
+            notas: 'Paciente en sala de espera'
+        }
+    ]
+]);
 const odontograms = new Map();
 const periodontograms = new Map();
 const informedConsents = new Map();
@@ -240,6 +278,36 @@ app.get('/api/rips/generate/:patientId', (req, res) => {
         items
     });
     res.json(ripsJson);
+});
+// ==========================================
+// MÓDULO 7: AGENDAMIENTO & CONTROL DE BOXES
+// ==========================================
+app.get('/api/appointments', (req, res) => {
+    res.json(Array.from(appointments.values()));
+});
+app.post('/api/appointments', (req, res) => {
+    const data = req.body;
+    const id = data.id || `apt-${Date.now()}`;
+    const newAppointment = {
+        ...data,
+        id,
+        estado: data.estado || 'programada',
+        origen: data.origen || 'recepcion_presencial'
+    };
+    appointments.set(id, newAppointment);
+    res.status(201).json({ success: true, appointment: newAppointment });
+});
+app.patch('/api/appointments/:id/status', (req, res) => {
+    const id = String(req.params.id);
+    const { estado } = req.body;
+    const existing = appointments.get(id);
+    if (!existing) {
+        res.status(404).json({ error: 'Cita no encontrada' });
+        return;
+    }
+    existing.estado = estado;
+    appointments.set(id, existing);
+    res.json({ success: true, appointment: existing });
 });
 app.listen(port, () => {
     console.log(`🦷 Dental EHR corriendo en puerto ${port}`);

@@ -104,7 +104,8 @@
     </header>
 
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('tab-odontogram')">🦷 Odontograma FDI</button>
+      <button class="tab-btn active" onclick="switchTab('tab-agenda')">📅 Agenda & Citas (Boxes)</button>
+      <button class="tab-btn" onclick="switchTab('tab-odontogram')">🦷 Odontograma FDI</button>
       <button class="tab-btn" onclick="switchTab('tab-perio')">📊 Periodontograma (Sondaje 6 Puntos)</button>
       <button class="tab-btn" onclick="switchTab('tab-consent')">✍️ Consentimiento & Firma (Ley 527)</button>
       <button class="tab-btn" onclick="switchTab('tab-patient')">👤 Ficha del Paciente</button>
@@ -112,8 +113,40 @@
       <button class="tab-btn" onclick="switchTab('tab-rips')">🇨🇴 RIPS JSON (MinSalud)</button>
     </div>
 
-    <!-- PESTAÑA 1: ODONTOGRAMA FDI (ADULTO / INFANTIL) -->
-    <div id="tab-odontogram" class="tab-content active">
+    <!-- PESTAÑA PRINCIPAL: AGENDA Y CITAS CLÍNICAS (BOXES) -->
+    <div id="tab-agenda" class="tab-content active">
+      <div class="card">
+        <h2>
+          <span>Agenda Diaria por Sillón Dental (Boxes)</span>
+          <button onclick="openNewAppointmentModal()">+ Nueva Cita en Box</button>
+        </h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Control en tiempo real de pacientes citados, confirmaciones automáticas por WhatsApp (Dental AI Agent) y estado en sala de espera:
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Paciente</th>
+              <th>Teléfono</th>
+              <th>Especialista</th>
+              <th>Sillón / Box</th>
+              <th>Motivo de Consulta</th>
+              <th>Origen</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="agendaTableBody">
+            <tr><td colspan="9" style="text-align: center;">Cargando citas del día...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: ODONTOGRAMA FDI (ADULTO / INFANTIL) -->
+    <div id="tab-odontogram" class="tab-content">
       <div class="card">
         <h2>
           <span>Odontograma Digital Interactivo</span>
@@ -478,9 +511,107 @@
       } catch (e) {}
     }
 
+    // Cargar Agenda de Citas
+    async function loadAppointments() {
+      try {
+        const res = await fetch('/api/appointments');
+        const list = await res.json();
+        const tbody = document.getElementById('agendaTableBody');
+        
+        if (list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">No hay citas registradas para hoy.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(apt => {
+          let badgeColor = '#64748b';
+          let badgeBg = '#f1f5f9';
+          let label = apt.estado;
+
+          if (apt.estado === 'confirmada_whatsapp') {
+            badgeColor = '#15803d'; badgeBg = '#dcfce7'; label = 'Confirmada por WhatsApp';
+          } else if (apt.estado === 'en_sala_espera') {
+            badgeColor = '#0369a1'; badgeBg = '#e0f2fe'; label = 'En Sala de Espera';
+          } else if (apt.estado === 'en_atencion') {
+            badgeColor = '#b45309'; badgeBg = '#fef3c7'; label = 'En Atención (Sillón)';
+          } else if (apt.estado === 'finalizada') {
+            badgeColor = '#475569'; badgeBg = '#e2e8f0'; label = 'Finalizada';
+          }
+
+          const originLabel = apt.origen === 'whatsapp_ia' ? '🤖 WhatsApp Bot (Sofía)' : '🏢 Recepción';
+
+          return `
+            <tr>
+              <td><strong>${apt.horaInicio}</strong></td>
+              <td>${apt.patientName}</td>
+              <td><small>${apt.patientPhone}</small></td>
+              <td>${apt.especialista}</td>
+              <td><span style="font-weight: 600; color: var(--primary);">${apt.boxSillon}</span></td>
+              <td>${apt.motivoConsulta}</td>
+              <td><small>${originLabel}</small></td>
+              <td>
+                <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 3px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">
+                  ${label}
+                </span>
+              </td>
+              <td>
+                <select onchange="updateAppointmentStatus('${apt.id}', this.value)" style="font-size: 0.8rem; padding: 2px 4px; border-radius: 4px; border: 1px solid var(--border);">
+                  <option value="" disabled selected>Cambiar estado...</option>
+                  <option value="en_sala_espera">En Sala de Espera</option>
+                  <option value="en_atencion">Pasar al Sillón</option>
+                  <option value="finalizada">Finalizar Cita</option>
+                  <option value="no_asistio">No Asistió</option>
+                </select>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function updateAppointmentStatus(id, estado) {
+      await fetch(`/api/appointments/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado })
+      });
+      loadAppointments();
+    }
+
+    async function openNewAppointmentModal() {
+      const name = prompt('Nombre del paciente:');
+      if (!name) return;
+      const phone = prompt('Teléfono WhatsApp:', '+57300');
+      const time = prompt('Hora de la cita (ej. 14:00):', '14:00');
+      const box = prompt('Sillón / Box:', 'Box 1 - Escáner 3D');
+      const motivo = prompt('Motivo de consulta:', 'Valoración General');
+
+      await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: '1',
+          patientName: name,
+          patientPhone: phone,
+          especialista: 'Dr. Alejandro Restrepo',
+          boxSillon: box,
+          fecha: new Date().toISOString().split('T')[0],
+          horaInicio: time,
+          duracionMinutos: 45,
+          motivoConsulta: motivo,
+          estado: 'programada',
+          origen: 'recepcion_presencial'
+        })
+      });
+      loadAppointments();
+    }
+
     loadPatient();
     fetchRips();
     loadConsents();
+    loadAppointments();
   </script>
 </body>
 </html>
