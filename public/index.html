@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dental EHR - Historia Clínica & Odontograma Interactivo</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #dc2626;
+      --info: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    h1 { font-size: 1.6rem; color: var(--primary-dark); }
+    .badge { background: #dcfce7; color: #15803d; padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; }
+    
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .tab-btn { border: none; background: transparent; padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+    h2 { font-size: 1.2rem; margin-bottom: 1rem; color: var(--text); }
+    
+    /* Odontograma Visual */
+    .odontogram-wrapper { background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; text-align: center; }
+    .dental-arch { display: flex; justify-content: center; gap: 8px; margin-bottom: 1.5rem; }
+    .tooth-container { display: flex; flex-direction: column; align-items: center; width: 44px; }
+    .tooth-num { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+    
+    /* Diente con 5 caras interactivas */
+    .tooth-box {
+      width: 36px; height: 36px; position: relative; border: 1px solid #94a3b8; background: #f1f5f9; cursor: pointer;
+    }
+    .surface {
+      position: absolute; background: #e2e8f0; transition: background 0.2s;
+    }
+    .surface:hover { background: #cbd5e1; }
+    .surface.vestibular { top: 0; left: 6px; width: 22px; height: 8px; border-bottom: 1px solid #94a3b8; }
+    .surface.lingual { bottom: 0; left: 6px; width: 22px; height: 8px; border-top: 1px solid #94a3b8; }
+    .surface.mesial { top: 6px; left: 0; width: 8px; height: 22px; border-right: 1px solid #94a3b8; }
+    .surface.distal { top: 6px; right: 0; width: 8px; height: 22px; border-left: 1px solid #94a3b8; }
+    .surface.oclusal { top: 8px; left: 8px; width: 18px; height: 18px; border-radius: 2px; }
+    
+    .surface.red { background: #ef4444 !important; }
+    .surface.blue { background: #3b82f6 !important; }
+
+    .legend { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; font-weight: 600; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot-red { width: 14px; height: 14px; background: #ef4444; border-radius: 3px; }
+    .dot-blue { width: 14px; height: 14px; background: #3b82f6; border-radius: 3px; }
+    
+    /* Tablas y JSON */
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; color: var(--text-muted); font-weight: 600; }
+    
+    pre { background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; max-height: 400px; }
+    button { background: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    button:hover { background: var(--primary-dark); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>🦷 Dental EHR Colombia</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Historia Clínica, Odontograma FDI y Cumplimiento RIPS JSON (Res. 2275)</p>
+      </div>
+      <div>
+        <span class="badge">Puerto 3016 • En Línea</span>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-odontogram')">🦷 Odontograma FDI</button>
+      <button class="tab-btn" onclick="switchTab('tab-patient')">👤 Historia del Paciente</button>
+      <button class="tab-btn" onclick="switchTab('tab-plans')">📋 Planes de Tratamiento</button>
+      <button class="tab-btn" onclick="switchTab('tab-rips')">🇨🇴 Generador RIPS JSON (MinSalud)</button>
+    </div>
+
+    <!-- PESTAÑA 1: ODONTOGRAMA FDI -->
+    <div id="tab-odontogram" class="tab-content active">
+      <div class="card">
+        <h2>Odontograma Digital Adulto (Sistema FDI de dos dígitos)</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Haz clic en cualquier cara del diente (Oclusal, Vestibular, Lingual, Mesial, Distal) para alternar entre: <strong>Blanco (Sano) ➔ 🔴 Rojo (Caries/Requerido) ➔ 🔵 Azul (Tratado/Obturado)</strong>.
+        </p>
+
+        <div class="odontogram-wrapper">
+          <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA SUPERIOR (Cuadrantes 1 y 2)</div>
+          <div class="dental-arch" id="upperArch"></div>
+
+          <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA INFERIOR (Cuadrantes 4 y 3)</div>
+          <div class="dental-arch" id="lowerArch"></div>
+
+          <div class="legend">
+            <div class="legend-item"><div class="dot-red"></div> Rojo: Caries / Tratamiento Requerido</div>
+            <div class="legend-item"><div class="dot-blue"></div> Azul: Obturación / Tratamiento Realizado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: PACIENTE -->
+    <div id="tab-patient" class="tab-content">
+      <div class="card">
+        <h2>Ficha del Paciente & Antecedentes Médicos</h2>
+        <div id="patientDetails" style="font-size: 0.95rem; line-height: 1.8;">
+          Cargando datos del paciente...
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: PLANES DE TRATAMIENTO -->
+    <div id="tab-plans" class="tab-content">
+      <div class="card">
+        <h2>Presupuesto y Plan de Tratamiento por Fases</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Diente</th>
+              <th>Fase</th>
+              <th>Procedimiento</th>
+              <th>Código CUPS</th>
+              <th>CIE-10</th>
+              <th>Costo (COP)</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>16 (Molar Sup. Der.)</td>
+              <td>Restaurativa</td>
+              <td>Obturación con resina de fotocurado</td>
+              <td>232101</td>
+              <td>K021</td>
+              <td>$140.000</td>
+              <td><span style="color: #16a34a; font-weight: 600;">Finalizado</span></td>
+            </tr>
+            <tr>
+              <td>21 (Incisivo Central)</td>
+              <td>Estética</td>
+              <td>Alineador Invisible 3D (Set-up digital)</td>
+              <td>890201</td>
+              <td>K072</td>
+              <td>$160.000</td>
+              <td><span style="color: #0284c7; font-weight: 600;">En Curso</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 4: RIPS JSON RESOLUCIÓN 2275 -->
+    <div id="tab-rips" class="tab-content">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2>Estructura RIPS Oficial (MinSalud Colombia)</h2>
+          <button onclick="fetchRips()">Regenerar RIPS JSON</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Este JSON cumple con la <strong>Resolución 2275 de 2023</strong> para su envío al portal del SISPRO / Facturación Electrónica en Salud:
+        </p>
+        <pre id="ripsJsonOutput">Cargando RIPS JSON...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Renderizar Odontograma FDI
+    const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+    const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+
+    function createToothHtml(num) {
+      return `
+        <div class="tooth-container">
+          <span class="tooth-num">${num}</span>
+          <div class="tooth-box" data-tooth="${num}">
+            <div class="surface vestibular" onclick="toggleSurface(this)"></div>
+            <div class="surface mesial" onclick="toggleSurface(this)"></div>
+            <div class="surface oclusal" onclick="toggleSurface(this)"></div>
+            <div class="surface distal" onclick="toggleSurface(this)"></div>
+            <div class="surface lingual" onclick="toggleSurface(this)"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('upperArch').innerHTML = upperTeeth.map(createToothHtml).join('');
+    document.getElementById('lowerArch').innerHTML = lowerTeeth.map(createToothHtml).join('');
+
+    function toggleSurface(el) {
+      if (!el.classList.contains('red') && !el.classList.contains('blue')) {
+        el.classList.add('red');
+      } else if (el.classList.contains('red')) {
+        el.classList.remove('red');
+        el.classList.add('blue');
+      } else {
+        el.classList.remove('blue');
+      }
+    }
+
+    // Cargar Paciente
+    async function loadPatient() {
+      try {
+        const res = await fetch('/api/patients');
+        const data = await res.json();
+        if (data.length > 0) {
+          const p = data[0];
+          document.getElementById('patientDetails').innerHTML = `
+            <strong>Nombre:</strong> ${p.nombres} ${p.apellidos} <br>
+            <strong>Identificación:</strong> ${p.tipoDocumento} ${p.numeroDocumento} <br>
+            <strong>Teléfono WhatsApp:</strong> ${p.telefono} <br>
+            <strong>Ciudad / Sede:</strong> ${p.ciudad} (${p.direccion}) <br>
+            <strong>Aseguradora / EPS:</strong> ${p.epsAseguradora} <br>
+            <strong>Contacto Emergencia:</strong> ${p.contactoEmergencia.nombre} (${p.contactoEmergencia.parentesco} - ${p.contactoEmergencia.telefono})
+          `;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Cargar RIPS JSON
+    async function fetchRips() {
+      try {
+        const res = await fetch('/api/rips/generate/1');
+        const json = await res.json();
+        document.getElementById('ripsJsonOutput').innerText = JSON.stringify(json, null, 2);
+      } catch (e) {
+        document.getElementById('ripsJsonOutput').innerText = 'Error al cargar RIPS JSON';
+      }
+    }
+
+    loadPatient();
+    fetchRips();
+  </script>
+</body>
+</html>

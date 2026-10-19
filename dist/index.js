@@ -6,11 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const ripsService_js_1 = require("./services/ripsService.js");
+const path_1 = __importDefault(require("path"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3016;
 const ripsService = new ripsService_js_1.RipsService();
 app.use(express_1.default.json());
+app.use(express_1.default.static(path_1.default.resolve(process.cwd(), 'public')));
 // In-Memory Database para prototipado rápido
 const patients = new Map([
     [

@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import { Patient, OdontogramState, TreatmentPlanItem } from './models/ehrModels.js';
 import { RipsService } from './services/ripsService.js';
 
+import path from 'path';
+
 dotenv.config();
 
 const app = express();
@@ -10,6 +12,7 @@ const port = process.env.PORT || 3016;
 const ripsService = new RipsService();
 
 app.use(express.json());
+app.use(express.static(path.resolve(process.cwd(), 'public')));
 
 // In-Memory Database para prototipado rápido
 const patients: Map<string, Patient> = new Map([
