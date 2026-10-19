@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dental EHR - Historia Clínica & Odontograma Interactivo</title>
+  <title>Dental EHR - Historia Clínica, Periodontograma & Consentimientos</title>
   <style>
     :root {
       --primary: #0284c7;
@@ -13,38 +13,42 @@
       --text: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
-      --danger: #dc2626;
-      --info: #2563eb;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --info: #3b82f6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem; }
-    .container { max-width: 1200px; margin: 0 auto; }
+    .container { max-width: 1250px; margin: 0 auto; }
     header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
     h1 { font-size: 1.6rem; color: var(--primary-dark); }
     .badge { background: #dcfce7; color: #15803d; padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; }
     
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
-    .tab-btn { border: none; background: transparent; padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); overflow-x: auto; }
+    .tab-btn { border: none; background: transparent; padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
     .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
-    h2 { font-size: 1.2rem; margin-bottom: 1rem; color: var(--text); }
+    h2 { font-size: 1.2rem; margin-bottom: 1rem; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
     
+    /* Selector de Dentición */
+    .dentition-switcher { display: flex; gap: 0.5rem; background: #e2e8f0; padding: 0.25rem; border-radius: 8px; width: fit-content; margin-bottom: 1rem; }
+    .dentition-btn { border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-muted); }
+    .dentition-btn.active { background: white; color: var(--primary-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
     /* Odontograma Visual */
     .odontogram-wrapper { background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; text-align: center; }
-    .dental-arch { display: flex; justify-content: center; gap: 8px; margin-bottom: 1.5rem; }
-    .tooth-container { display: flex; flex-direction: column; align-items: center; width: 44px; }
+    .dental-arch { display: flex; justify-content: center; gap: 8px; margin-bottom: 1.5rem; flex-wrap: nowrap; }
+    .tooth-container { display: flex; flex-direction: column; align-items: center; width: 42px; }
     .tooth-num { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
     
-    /* Diente con 5 caras interactivas */
     .tooth-box {
       width: 36px; height: 36px; position: relative; border: 1px solid #94a3b8; background: #f1f5f9; cursor: pointer;
     }
-    .surface {
-      position: absolute; background: #e2e8f0; transition: background 0.2s;
-    }
+    .surface { position: absolute; background: #e2e8f0; transition: background 0.15s; }
     .surface:hover { background: #cbd5e1; }
     .surface.vestibular { top: 0; left: 6px; width: 22px; height: 8px; border-bottom: 1px solid #94a3b8; }
     .surface.lingual { bottom: 0; left: 6px; width: 22px; height: 8px; border-top: 1px solid #94a3b8; }
@@ -52,22 +56,39 @@
     .surface.distal { top: 6px; right: 0; width: 8px; height: 22px; border-left: 1px solid #94a3b8; }
     .surface.oclusal { top: 8px; left: 8px; width: 18px; height: 18px; border-radius: 2px; }
     
-    .surface.red { background: #ef4444 !important; }
-    .surface.blue { background: #3b82f6 !important; }
+    .surface.red { background: var(--danger) !important; }
+    .surface.blue { background: var(--info) !important; }
 
     .legend { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; font-weight: 600; }
     .legend-item { display: flex; align-items: center; gap: 6px; }
-    .dot-red { width: 14px; height: 14px; background: #ef4444; border-radius: 3px; }
-    .dot-blue { width: 14px; height: 14px; background: #3b82f6; border-radius: 3px; }
-    
-    /* Tablas y JSON */
+    .dot-red { width: 14px; height: 14px; background: var(--danger); border-radius: 3px; }
+    .dot-blue { width: 14px; height: 14px; background: var(--info); border-radius: 3px; }
+
+    /* Periodontograma Styles */
+    .perio-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .perio-kpi { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+    .perio-kpi-val { font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); }
+    .perio-kpi-val.danger { color: var(--danger); }
+    .perio-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; }
+    .perio-table th, .perio-table td { padding: 6px; border: 1px solid var(--border); }
+    .perio-table th { background: #f1f5f9; }
+    .input-sondaje { width: 32px; text-align: center; padding: 4px; border: 1px solid var(--border); border-radius: 4px; font-weight: 700; }
+    .input-sondaje.pocket { background: #fee2e2; color: var(--danger); border-color: var(--danger); }
+    .bop-checkbox { accent-color: var(--danger); width: 16px; height: 16px; cursor: pointer; }
+
+    /* Consentimiento y Firma Digital */
+    .signature-pad-wrapper { border: 2px dashed var(--border); border-radius: 8px; width: 100%; max-width: 500px; height: 180px; background: #fafafa; position: relative; margin-bottom: 1rem; }
+    canvas { width: 100%; height: 100%; cursor: crosshair; }
+    .consent-card { border-left: 4px solid var(--primary); padding: 1rem; background: #f0f9ff; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.6; }
+
+    /* Tablas y utilidades */
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
     th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
     th { background: #f8fafc; color: var(--text-muted); font-weight: 600; }
-    
-    pre { background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; max-height: 400px; }
     button { background: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
     button:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e2e8f0; color: var(--text); margin-left: 0.5rem; }
+    pre { background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; max-height: 400px; }
   </style>
 </head>
 <body>
@@ -75,7 +96,7 @@
     <header>
       <div>
         <h1>🦷 Dental EHR Colombia</h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Historia Clínica, Odontograma FDI y Cumplimiento RIPS JSON (Res. 2275)</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Historia Clínica Odontológica, Periodontograma, Consentimiento Digital y RIPS Res. 2275</p>
       </div>
       <div>
         <span class="badge">Puerto 3016 • En Línea</span>
@@ -84,24 +105,32 @@
 
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('tab-odontogram')">🦷 Odontograma FDI</button>
-      <button class="tab-btn" onclick="switchTab('tab-patient')">👤 Historia del Paciente</button>
+      <button class="tab-btn" onclick="switchTab('tab-perio')">📊 Periodontograma (Sondaje 6 Puntos)</button>
+      <button class="tab-btn" onclick="switchTab('tab-consent')">✍️ Consentimiento & Firma (Ley 527)</button>
+      <button class="tab-btn" onclick="switchTab('tab-patient')">👤 Ficha del Paciente</button>
       <button class="tab-btn" onclick="switchTab('tab-plans')">📋 Planes de Tratamiento</button>
-      <button class="tab-btn" onclick="switchTab('tab-rips')">🇨🇴 Generador RIPS JSON (MinSalud)</button>
+      <button class="tab-btn" onclick="switchTab('tab-rips')">🇨🇴 RIPS JSON (MinSalud)</button>
     </div>
 
-    <!-- PESTAÑA 1: ODONTOGRAMA FDI -->
+    <!-- PESTAÑA 1: ODONTOGRAMA FDI (ADULTO / INFANTIL) -->
     <div id="tab-odontogram" class="tab-content active">
       <div class="card">
-        <h2>Odontograma Digital Adulto (Sistema FDI de dos dígitos)</h2>
+        <h2>
+          <span>Odontograma Digital Interactivo</span>
+          <div class="dentition-switcher">
+            <button class="dentition-btn active" id="btnAdult" onclick="setDentition('permanente')">Dentición Adulto (11-48)</button>
+            <button class="dentition-btn" id="btnChild" onclick="setDentition('temporal')">Dentición Infantil (51-85)</button>
+          </div>
+        </h2>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-          Haz clic en cualquier cara del diente (Oclusal, Vestibular, Lingual, Mesial, Distal) para alternar entre: <strong>Blanco (Sano) ➔ 🔴 Rojo (Caries/Requerido) ➔ 🔵 Azul (Tratado/Obturado)</strong>.
+          Haz clic en cualquier cara del diente (Oclusal, Vestibular, Lingual, Mesial, Distal) para alternar: <strong>Sano ➔ 🔴 Rojo (Caries/Requerido) ➔ 🔵 Azul (Obturado/Realizado)</strong>.
         </p>
 
         <div class="odontogram-wrapper">
-          <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA SUPERIOR (Cuadrantes 1 y 2)</div>
+          <div id="upperTitle" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA SUPERIOR</div>
           <div class="dental-arch" id="upperArch"></div>
 
-          <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA INFERIOR (Cuadrantes 4 y 3)</div>
+          <div id="lowerTitle" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA INFERIOR</div>
           <div class="dental-arch" id="lowerArch"></div>
 
           <div class="legend">
@@ -112,7 +141,111 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 2: PACIENTE -->
+    <!-- PESTAÑA 2: PERIODONTOGRAMA DIGITAL -->
+    <div id="tab-perio" class="tab-content">
+      <div class="card">
+        <h2>Evaluación Periodontal (Sondaje en 6 Puntos Clínicos)</h2>
+        <div class="perio-kpi-grid">
+          <div class="perio-kpi">
+            <div class="perio-kpi-val" id="kpiBop">12.5%</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Índice de Sangrado al Sondaje (BOP)</div>
+          </div>
+          <div class="perio-kpi">
+            <div class="perio-kpi-val danger" id="kpiPockets">3</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Bolsas Periodontales ≥ 4 mm</div>
+          </div>
+          <div class="perio-kpi">
+            <div class="perio-kpi-val">1</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Afectación de Furca (Molar 16)</div>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Registro de 6 puntos por pieza (Mesio-Vestibular, Centro, Disto-Vestibular, Mesio-Lingual, Centro, Disto-Lingual). Los valores ≥ 4 mm se marcan en rojo automáticamente indicando bolsa periodontal activa:
+        </p>
+
+        <table class="perio-table">
+          <thead>
+            <tr>
+              <th>Diente FDI</th>
+              <th>Movilidad</th>
+              <th>Furca</th>
+              <th>Sondaje Vestibular (mm) [M - C - D]</th>
+              <th>BOP Vestibular (Sangrado)</th>
+              <th>Sondaje Lingual/Palatino (mm) [M - C - D]</th>
+              <th>BOP Lingual</th>
+              <th>Placa</th>
+            </tr>
+          </thead>
+          <tbody id="perioTableBody">
+            <tr>
+              <td><strong>16 (Molar Sup)</strong></td>
+              <td>Grado I</td>
+              <td>Grado I</td>
+              <td>
+                <input class="input-sondaje" value="3" />
+                <input class="input-sondaje" value="2" />
+                <input class="input-sondaje pocket" value="5" />
+              </td>
+              <td><input type="checkbox" class="bop-checkbox" checked /></td>
+              <td>
+                <input class="input-sondaje" value="2" />
+                <input class="input-sondaje" value="2" />
+                <input class="input-sondaje" value="3" />
+              </td>
+              <td><input type="checkbox" class="bop-checkbox" /></td>
+              <td><input type="checkbox" class="bop-checkbox" checked /></td>
+            </tr>
+            <tr>
+              <td><strong>21 (Incisivo Central)</strong></td>
+              <td>Grado 0</td>
+              <td>—</td>
+              <td>
+                <input class="input-sondaje" value="2" />
+                <input class="input-sondaje" value="2" />
+                <input class="input-sondaje" value="2" />
+              </td>
+              <td><input type="checkbox" class="bop-checkbox" /></td>
+              <td>
+                <input class="input-sondaje" value="2" />
+                <input class="input-sondaje" value="2" />
+                <input class="input-sondaje" value="2" />
+              </td>
+              <td><input type="checkbox" class="bop-checkbox" /></td>
+              <td><input type="checkbox" class="bop-checkbox" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: CONSENTIMIENTOS & FIRMA DIGITAL (LEY 527) -->
+    <div id="tab-consent" class="tab-content">
+      <div class="card">
+        <h2>Consentimiento Informado & Firma Digital en Pantalla</h2>
+        
+        <div class="consent-card">
+          <strong>DOCUMENTO CLÍNICO: CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE IMPLANTES Y CIRUGÍA GUIADA</strong><br>
+          Yo, en calidad de paciente, manifiesto que he sido informado de forma clara sobre el diagnóstico, la técnica quirúrgica mediante guía computarizada 3D, riesgos previsibles (inflamación, sangrado leve transitorio, molestias locales) y alternativas terapéuticas. Autorizo la realización del procedimiento de conformidad con la Ley 527 de 1999 de Colombia.
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">Firma del Paciente (Dibuja con el mouse o dedo en pantalla táctil):</label>
+          <div class="signature-pad-wrapper">
+            <canvas id="sigCanvas"></canvas>
+          </div>
+          <button onclick="saveConsent()">Guardar y Sellar Consentimiento</button>
+          <button class="btn-secondary" onclick="clearSignature()">Limpiar Firma</button>
+        </div>
+
+        <div id="consentHistory" style="margin-top: 1.5rem;">
+          <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Consentimientos Sellados del Paciente</h3>
+          <div id="consentList" style="font-size: 0.85rem; color: var(--text-muted);">Sin consentimientos previos en esta sesión.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 4: PACIENTE -->
     <div id="tab-patient" class="tab-content">
       <div class="card">
         <h2>Ficha del Paciente & Antecedentes Médicos</h2>
@@ -122,7 +255,7 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 3: PLANES DE TRATAMIENTO -->
+    <!-- PESTAÑA 5: PLANES DE TRATAMIENTO -->
     <div id="tab-plans" class="tab-content">
       <div class="card">
         <h2>Presupuesto y Plan de Tratamiento por Fases</h2>
@@ -162,16 +295,13 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 4: RIPS JSON RESOLUCIÓN 2275 -->
+    <!-- PESTAÑA 6: RIPS JSON RESOLUCIÓN 2275 -->
     <div id="tab-rips" class="tab-content">
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
           <h2>Estructura RIPS Oficial (MinSalud Colombia)</h2>
           <button onclick="fetchRips()">Regenerar RIPS JSON</button>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-          Este JSON cumple con la <strong>Resolución 2275 de 2023</strong> para su envío al portal del SISPRO / Facturación Electrónica en Salud:
-        </p>
         <pre id="ripsJsonOutput">Cargando RIPS JSON...</pre>
       </div>
     </div>
@@ -185,9 +315,12 @@
       event.target.classList.add('active');
     }
 
-    // Renderizar Odontograma FDI
-    const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
-    const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+    // Denticiones Adulto (11 al 48) vs Infantil (51 al 85)
+    const adultUpper = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+    const adultLower = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+    
+    const childUpper = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
+    const childLower = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
 
     function createToothHtml(num) {
       return `
@@ -204,8 +337,19 @@
       `;
     }
 
-    document.getElementById('upperArch').innerHTML = upperTeeth.map(createToothHtml).join('');
-    document.getElementById('lowerArch').innerHTML = lowerTeeth.map(createToothHtml).join('');
+    function setDentition(type) {
+      if (type === 'permanente') {
+        document.getElementById('btnAdult').classList.add('active');
+        document.getElementById('btnChild').classList.remove('active');
+        document.getElementById('upperArch').innerHTML = adultUpper.map(createToothHtml).join('');
+        document.getElementById('lowerArch').innerHTML = adultLower.map(createToothHtml).join('');
+      } else {
+        document.getElementById('btnChild').classList.add('active');
+        document.getElementById('btnAdult').classList.remove('active');
+        document.getElementById('upperArch').innerHTML = childUpper.map(createToothHtml).join('');
+        document.getElementById('lowerArch').innerHTML = childLower.map(createToothHtml).join('');
+      }
+    }
 
     function toggleSurface(el) {
       if (!el.classList.contains('red') && !el.classList.contains('blue')) {
@@ -218,7 +362,96 @@
       }
     }
 
-    // Cargar Paciente
+    setDentition('permanente');
+
+    // Canvas de Firma Digital (Ley 527)
+    const canvas = document.getElementById('sigCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 500;
+    canvas.height = 180;
+    let isDrawing = false;
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      const { x, y } = getCoords(e);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      e.preventDefault();
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const { x, y } = getCoords(e);
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      e.preventDefault();
+    }
+
+    function stopDraw() { isDrawing = false; }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDraw);
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    async function saveConsent() {
+      const dataUrl = canvas.toDataURL();
+      const res = await fetch('/api/consents/1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipoProcedimiento: 'Cirugía de Implantes',
+          contenidoTexto: 'Autorizo la realización del procedimiento de cirugía guiada e implantes.',
+          riesgosInformados: ['Inflamación local', 'Molestias postoperatorias'],
+          firmaDigitalBase64: dataUrl
+        })
+      });
+      const result = await res.json();
+      if (result.success) {
+        alert('✅ Consentimiento firmado y sellado criptográficamente con éxito.');
+        loadConsents();
+        clearSignature();
+      }
+    }
+
+    async function loadConsents() {
+      try {
+        const res = await fetch('/api/consents/1');
+        const list = await res.json();
+        const container = document.getElementById('consentList');
+        if (list.length === 0) {
+          container.innerHTML = 'Sin consentimientos previos registrados.';
+          return;
+        }
+        container.innerHTML = list.map(c => `
+          <div style="background: #f8fafc; border: 1px solid var(--border); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
+            <strong>${c.tipoProcedimiento}</strong> • Firmado el ${new Date(c.fechaHoraFirma).toLocaleString('es-CO')}<br>
+            <small style="color: var(--text-muted); word-break: break-all;">Hash Criptográfico SHA-256: ${c.hashIntegridad}</small>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    // Cargar Paciente y RIPS
     async function loadPatient() {
       try {
         const res = await fetch('/api/patients');
@@ -234,24 +467,20 @@
             <strong>Contacto Emergencia:</strong> ${p.contactoEmergencia.nombre} (${p.contactoEmergencia.parentesco} - ${p.contactoEmergencia.telefono})
           `;
         }
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
     }
 
-    // Cargar RIPS JSON
     async function fetchRips() {
       try {
         const res = await fetch('/api/rips/generate/1');
         const json = await res.json();
         document.getElementById('ripsJsonOutput').innerText = JSON.stringify(json, null, 2);
-      } catch (e) {
-        document.getElementById('ripsJsonOutput').innerText = 'Error al cargar RIPS JSON';
-      }
+      } catch (e) {}
     }
 
     loadPatient();
     fetchRips();
+    loadConsents();
   </script>
 </body>
 </html>

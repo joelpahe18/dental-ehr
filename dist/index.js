@@ -5,15 +5,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const ripsService_js_1 = require("./services/ripsService.js");
 const path_1 = __importDefault(require("path"));
+const crypto_1 = __importDefault(require("crypto"));
+const ripsService_js_1 = require("./services/ripsService.js");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3016;
 const ripsService = new ripsService_js_1.RipsService();
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.static(path_1.default.resolve(process.cwd(), 'public')));
-// In-Memory Database para prototipado rápido
+// Base de Datos en Memoria para desarrollo ágil
 const patients = new Map([
     [
         '1',
@@ -39,13 +40,22 @@ const patients = new Map([
     ]
 ]);
 const odontograms = new Map();
+const periodontograms = new Map();
+const informedConsents = new Map();
 const treatmentPlans = new Map();
 // Estado de Salud
 app.get('/health', (req, res) => {
     res.json({
         status: 'online',
-        system: 'Dental EHR - Sistema de Historia Clínica Odontológica',
-        modules: ['Pacientes', 'Historia Clínica', 'Odontograma FDI', 'Planes de Tratamiento', 'RIPS Res. 2275'],
+        system: 'Dental EHR - Sistema Clínico Odontológico',
+        modules: [
+            'Pacientes',
+            'Odontograma Mixto (Adulto e Infantil)',
+            'Periodontograma Digital (NIC, BOP, Furcas)',
+            'Consentimientos Digitales (Ley 527)',
+            'Planes de Tratamiento',
+            'RIPS Res. 2275'
+        ],
         port,
         timestamp: new Date().toISOString()
     });
@@ -64,12 +74,13 @@ app.post('/api/patients', (req, res) => {
     res.status(201).json(newPatient);
 });
 // ==========================================
-// MÓDULO 2: ODONTOGRAMA FDI INTERACTIVO
+// MÓDULO 2: ODONTOGRAMA FDI (ADULTO / INFANTIL)
 // ==========================================
 app.get('/api/odontogram/:patientId', (req, res) => {
     const patientId = String(req.params.patientId);
     const odontogram = odontograms.get(patientId) || {
         patientId,
+        dentitionType: 'permanente',
         version: 'inicial',
         updatedAt: new Date().toISOString(),
         teeth: {}
@@ -78,9 +89,10 @@ app.get('/api/odontogram/:patientId', (req, res) => {
 });
 app.post('/api/odontogram/:patientId', (req, res) => {
     const patientId = String(req.params.patientId);
-    const { teeth, version = 'evolucion' } = req.body;
+    const { teeth, dentitionType = 'permanente', version = 'evolucion' } = req.body;
     const updated = {
         patientId,
+        dentitionType,
         version,
         updatedAt: new Date().toISOString(),
         teeth: teeth || {}
@@ -89,7 +101,103 @@ app.post('/api/odontogram/:patientId', (req, res) => {
     res.json({ success: true, odontogram: updated });
 });
 // ==========================================
-// MÓDULO 3: PLANES DE TRATAMIENTO Y PRESUPUESTO
+// MÓDULO 3: PERIODONTOGRAMA DIGITAL (SONDAJE 6 PUNTOS)
+// ==========================================
+app.get('/api/periodontogram/:patientId', (req, res) => {
+    const patientId = String(req.params.patientId);
+    const perio = periodontograms.get(patientId) || {
+        patientId,
+        fecha: new Date().toISOString().split('T')[0],
+        periodoncista: 'Dra. Especialista en Periodoncia',
+        porcentajeSangradoBop: 12.5,
+        sitiosConBolsaMayor4mm: 3,
+        measurements: {
+            16: {
+                dienteFdi: 16,
+                sondajeVestibular: [3, 2, 5], // 5 mm bolsa en distal
+                margenVestibular: [0, 0, 1],
+                sangradoVestibular: [false, false, true], // sangrado en distal
+                sondajeLingual: [2, 2, 3],
+                margenLingual: [0, 0, 0],
+                sangradoLingual: [false, false, false],
+                movilidad: 1,
+                furca: 1,
+                placaBacteriana: true,
+                ausente: false
+            }
+        }
+    };
+    res.json(perio);
+});
+app.post('/api/periodontogram/:patientId', (req, res) => {
+    const patientId = String(req.params.patientId);
+    const { measurements, periodoncista = 'Especialista' } = req.body;
+    let totalPuntos = 0;
+    let puntosSangrado = 0;
+    let bolsasPeligro = 0;
+    Object.values(measurements || {}).forEach((m) => {
+        if (!m.ausente) {
+            // 6 puntos de sondaje
+            const allSondaje = [...(m.sondajeVestibular || []), ...(m.sondajeLingual || [])];
+            const allBop = [...(m.sangradoVestibular || []), ...(m.sangradoLingual || [])];
+            allSondaje.forEach(s => {
+                totalPuntos++;
+                if (s >= 4)
+                    bolsasPeligro++;
+            });
+            allBop.forEach(b => {
+                if (b)
+                    puntosSangrado++;
+            });
+        }
+    });
+    const porcentajeSangradoBop = totalPuntos > 0 ? Math.round((puntosSangrado / totalPuntos) * 100) : 0;
+    const perioState = {
+        patientId,
+        fecha: new Date().toISOString().split('T')[0],
+        periodoncista,
+        porcentajeSangradoBop,
+        sitiosConBolsaMayor4mm: bolsasPeligro,
+        measurements: measurements || {}
+    };
+    periodontograms.set(patientId, perioState);
+    res.json({ success: true, periodontogram: perioState });
+});
+// ==========================================
+// MÓDULO 4: CONSENTIMIENTO INFORMADO & FIRMA DIGITAL (LEY 527)
+// ==========================================
+app.get('/api/consents/:patientId', (req, res) => {
+    const patientId = String(req.params.patientId);
+    const list = informedConsents.get(patientId) || [];
+    res.json(list);
+});
+app.post('/api/consents/:patientId', (req, res) => {
+    const patientId = String(req.params.patientId);
+    const { tipoProcedimiento, contenidoTexto, riesgosInformados, firmaDigitalBase64 } = req.body;
+    if (!firmaDigitalBase64) {
+        res.status(400).json({ error: 'La firma digital es obligatoria.' });
+        return;
+    }
+    // Generar Hash criptográfico SHA-256 para garantizar la integridad legal del consentimiento
+    const rawPayload = `${patientId}|${tipoProcedimiento}|${contenidoTexto}|${firmaDigitalBase64}`;
+    const hashIntegridad = crypto_1.default.createHash('sha256').update(rawPayload).digest('hex');
+    const consent = {
+        id: `consent-${Date.now()}`,
+        patientId,
+        tipoProcedimiento: tipoProcedimiento || 'Cirugía de Implantes',
+        contenidoTexto: contenidoTexto || 'Autorizo de manera libre e informada la realización del procedimiento.',
+        riesgosInformados: riesgosInformados || ['Inflamación local', 'Molestias postoperatorias leves'],
+        fechaHoraFirma: new Date().toISOString(),
+        firmaDigitalBase64,
+        hashIntegridad
+    };
+    const existing = informedConsents.get(patientId) || [];
+    existing.push(consent);
+    informedConsents.set(patientId, existing);
+    res.status(201).json({ success: true, consent });
+});
+// ==========================================
+// MÓDULO 5: PLANES DE TRATAMIENTO Y PRESUPUESTO
 // ==========================================
 app.get('/api/treatment-plans/:patientId', (req, res) => {
     const patientId = String(req.params.patientId);
@@ -103,7 +211,7 @@ app.post('/api/treatment-plans/:patientId', (req, res) => {
     res.json({ success: true, count: items.length });
 });
 // ==========================================
-// MÓDULO 4: GENERACIÓN RIPS JSON (RESOLUCIÓN 2275 COLOMBIA)
+// MÓDULO 6: GENERACIÓN RIPS JSON (RESOLUCIÓN 2275 COLOMBIA)
 // ==========================================
 app.get('/api/rips/generate/:patientId', (req, res) => {
     const patientId = String(req.params.patientId);
