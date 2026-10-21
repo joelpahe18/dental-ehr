@@ -3,50 +3,409 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dental EHR - Historia Clínica, Periodontograma & Consentimientos</title>
+  <title>Dental EHR 360° - Historia Clínica Odontológica Inteligente</title>
   <style>
     :root {
       --primary: #0284c7;
       --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
       --danger: #ef4444;
+      --danger-light: #fee2e2;
       --success: #16a34a;
+      --success-light: #dcfce7;
       --warning: #f59e0b;
-      --info: #3b82f6;
+      --warning-light: #fef3c7;
+      --purple: #8b5cf6;
+      --purple-light: #ede9fe;
+      --radius: 12px;
+      --shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 4px -1px rgba(0, 0, 0, 0.03);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem; }
-    .container { max-width: 1250px; margin: 0 auto; }
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-    h1 { font-size: 1.6rem; color: var(--primary-dark); }
-    .badge { background: #dcfce7; color: #15803d; padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; }
-    
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); overflow-x: auto; }
-    .tab-btn { border: none; background: transparent; padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .topbar-brand h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      letter-spacing: -0.5px;
+    }
+    .topbar-badge {
+      background: var(--success-light);
+      color: var(--success);
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Main App Layout: 360 Bento Sidebar + Main Content */
+    .app-layout {
+      max-width: 1440px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .app-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Sticky 360 Patient Sidebar */
+    .patient-sidebar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      position: sticky;
+      top: 5rem;
+    }
+    .avatar-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .avatar-circle {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: white;
+      font-size: 1.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+      margin-bottom: 0.75rem;
+    }
+    .patient-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .patient-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* Alerts section */
+    .alert-section {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .alert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--danger-light);
+      color: var(--danger);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      margin: 0.2rem 0.2rem 0 0;
+    }
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      margin: 0.2rem 0.2rem 0 0;
+    }
+
+    /* Financial & Next Appointment Cards */
+    .sidebar-widget {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .widget-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .progress-bar-bg {
+      background: #e2e8f0;
+      border-radius: 9999px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 0.4rem;
+    }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #10b981, #059669);
+      height: 100%;
+      border-radius: 9999px;
+    }
+    .quick-actions {
+      padding-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    /* Navigation Tabs */
+    .tabs-bar {
+      display: flex;
+      gap: 0.35rem;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.4rem;
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+    }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 0.65rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 8px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+
+    /* Content Cards */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
-    h2 { font-size: 1.2rem; margin-bottom: 1rem; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
-    
-    /* Selector de Dentición */
-    .dentition-switcher { display: flex; gap: 0.5rem; background: #e2e8f0; padding: 0.25rem; border-radius: 8px; width: fit-content; margin-bottom: 1rem; }
-    .dentition-btn { border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-muted); }
-    .dentition-btn.active { background: white; color: var(--primary-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Timeline Styles */
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: #cbd5e1;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    .timeline-icon {
+      position: absolute;
+      left: -2rem;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .timeline-content {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      transition: all 0.2s;
+    }
+    .timeline-content:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .timeline-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      color: white;
+    }
+
+    /* Photo Gallery (Before & After) */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .photo-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .photo-card img {
+      width: 100%;
+      height: 210px;
+      object-fit: cover;
+      display: block;
+      background: #e2e8f0;
+    }
+    .photo-info {
+      padding: 0.9rem;
+    }
+    .photo-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 0.4rem;
+    }
+    .photo-tag.inicial_antes { background: #fee2e2; color: #b91c1c; }
+    .photo-tag.progreso { background: #e0f2fe; color: #0369a1; }
+    .photo-tag.final_despues { background: #dcfce7; color: #15803d; }
 
     /* Odontograma Visual */
-    .odontogram-wrapper { background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; text-align: center; }
-    .dental-arch { display: flex; justify-content: center; gap: 8px; margin-bottom: 1.5rem; flex-wrap: nowrap; }
-    .tooth-container { display: flex; flex-direction: column; align-items: center; width: 42px; }
-    .tooth-num { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
-    
+    .dentition-switcher {
+      display: inline-flex;
+      background: #e2e8f0;
+      padding: 0.25rem;
+      border-radius: 8px;
+    }
+    .dentition-btn {
+      border: none;
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .dentition-btn.active {
+      background: white;
+      color: var(--primary-dark);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .odontogram-wrapper {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      text-align: center;
+    }
+    .dental-arch {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 1.25rem;
+      flex-wrap: nowrap;
+    }
+    .tooth-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 40px;
+    }
+    .tooth-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
     .tooth-box {
-      width: 36px; height: 36px; position: relative; border: 1px solid #94a3b8; background: #f1f5f9; cursor: pointer;
+      width: 36px;
+      height: 36px;
+      position: relative;
+      border: 1px solid #94a3b8;
+      background: #f8fafc;
+      cursor: pointer;
     }
     .surface { position: absolute; background: #e2e8f0; transition: background 0.15s; }
     .surface:hover { background: #cbd5e1; }
@@ -55,316 +414,594 @@
     .surface.mesial { top: 6px; left: 0; width: 8px; height: 22px; border-right: 1px solid #94a3b8; }
     .surface.distal { top: 6px; right: 0; width: 8px; height: 22px; border-left: 1px solid #94a3b8; }
     .surface.oclusal { top: 8px; left: 8px; width: 18px; height: 18px; border-radius: 2px; }
-    
     .surface.red { background: var(--danger) !important; }
-    .surface.blue { background: var(--info) !important; }
+    .surface.blue { background: var(--primary) !important; }
 
     .legend { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; font-weight: 600; }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .dot-red { width: 14px; height: 14px; background: var(--danger); border-radius: 3px; }
-    .dot-blue { width: 14px; height: 14px; background: var(--info); border-radius: 3px; }
+    .dot-blue { width: 14px; height: 14px; background: var(--primary); border-radius: 3px; }
 
-    /* Periodontograma Styles */
-    .perio-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    /* Modal for Quick Odontogram to Budget Action */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      background: #ffffff;
+      border-radius: 12px;
+      max-width: 480px;
+      width: 90%;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    /* Buttons & Form Controls */
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: background 0.15s;
+    }
+    button:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f8fafc; }
+    .btn-success { background: var(--success); }
+    .btn-success:hover { background: #15803d; }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; color: var(--text-muted); font-weight: 600; }
+
+    /* Periodontogram */
+    .perio-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
     .perio-kpi { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
-    .perio-kpi-val { font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); }
+    .perio-kpi-val { font-size: 1.6rem; font-weight: 800; color: var(--primary-dark); }
     .perio-kpi-val.danger { color: var(--danger); }
-    .perio-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; }
-    .perio-table th, .perio-table td { padding: 6px; border: 1px solid var(--border); }
-    .perio-table th { background: #f1f5f9; }
     .input-sondaje { width: 32px; text-align: center; padding: 4px; border: 1px solid var(--border); border-radius: 4px; font-weight: 700; }
     .input-sondaje.pocket { background: #fee2e2; color: var(--danger); border-color: var(--danger); }
     .bop-checkbox { accent-color: var(--danger); width: 16px; height: 16px; cursor: pointer; }
 
-    /* Consentimiento y Firma Digital */
-    .signature-pad-wrapper { border: 2px dashed var(--border); border-radius: 8px; width: 100%; max-width: 500px; height: 180px; background: #fafafa; position: relative; margin-bottom: 1rem; }
+    /* Signature */
+    .signature-pad-wrapper { border: 2px dashed var(--border); border-radius: 8px; width: 100%; max-width: 500px; height: 160px; background: #fafafa; position: relative; margin-bottom: 1rem; }
     canvas { width: 100%; height: 100%; cursor: crosshair; }
-    .consent-card { border-left: 4px solid var(--primary); padding: 1rem; background: #f0f9ff; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.6; }
-
-    /* Tablas y utilidades */
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
-    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
-    th { background: #f8fafc; color: var(--text-muted); font-weight: 600; }
-    button { background: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    button:hover { background: var(--primary-dark); }
-    .btn-secondary { background: #e2e8f0; color: var(--text); margin-left: 0.5rem; }
-    pre { background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; max-height: 400px; }
+    pre { background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.82rem; max-height: 400px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span style="font-size: 1.5rem;">🦷</span>
       <div>
-        <h1>🦷 Dental EHR Colombia</h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Historia Clínica Odontológica, Periodontograma, Consentimiento Digital y RIPS Res. 2275</p>
-      </div>
-      <div>
-        <span class="badge">Puerto 3016 • En Línea</span>
-      </div>
-    </header>
-
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('tab-agenda')">📅 Agenda & Citas (Boxes)</button>
-      <button class="tab-btn" onclick="switchTab('tab-odontogram')">🦷 Odontograma FDI</button>
-      <button class="tab-btn" onclick="switchTab('tab-perio')">📊 Periodontograma (Sondaje 6 Puntos)</button>
-      <button class="tab-btn" onclick="switchTab('tab-consent')">✍️ Consentimiento & Firma (Ley 527)</button>
-      <button class="tab-btn" onclick="switchTab('tab-patient')">👤 Ficha del Paciente</button>
-      <button class="tab-btn" onclick="switchTab('tab-plans')">📋 Planes de Tratamiento</button>
-      <button class="tab-btn" onclick="switchTab('tab-rips')">🇨🇴 RIPS JSON (MinSalud)</button>
-    </div>
-
-    <!-- PESTAÑA PRINCIPAL: AGENDA Y CITAS CLÍNICAS (BOXES) -->
-    <div id="tab-agenda" class="tab-content active">
-      <div class="card">
-        <h2>
-          <span>Agenda Diaria por Sillón Dental (Boxes)</span>
-          <button onclick="openNewAppointmentModal()">+ Nueva Cita en Box</button>
-        </h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-          Control en tiempo real de pacientes citados, confirmaciones automáticas por WhatsApp (Dental AI Agent) y estado en sala de espera:
-        </p>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Hora</th>
-              <th>Paciente</th>
-              <th>Teléfono</th>
-              <th>Especialista</th>
-              <th>Sillón / Box</th>
-              <th>Motivo de Consulta</th>
-              <th>Origen</th>
-              <th>Estado</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody id="agendaTableBody">
-            <tr><td colspan="9" style="text-align: center;">Cargando citas del día...</td></tr>
-          </tbody>
-        </table>
+        <h1>Dental EHR 360°</h1>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">Historia Clínica Digital • Odontograma Bi-direccional • Ley 527 & RIPS Res. 2275</p>
       </div>
     </div>
+    <div class="topbar-actions">
+      <span class="topbar-badge">● Sincronizado en Vivo</span>
+      <span>Clínica Odontológica Especializada</span>
+    </div>
+  </header>
 
-    <!-- PESTAÑA 2: ODONTOGRAMA FDI (ADULTO / INFANTIL) -->
-    <div id="tab-odontogram" class="tab-content">
-      <div class="card">
-        <h2>
-          <span>Odontograma Digital Interactivo</span>
-          <div class="dentition-switcher">
-            <button class="dentition-btn active" id="btnAdult" onclick="setDentition('permanente')">Dentición Adulto (11-48)</button>
-            <button class="dentition-btn" id="btnChild" onclick="setDentition('temporal')">Dentición Infantil (51-85)</button>
-          </div>
-        </h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-          Haz clic en cualquier cara del diente (Oclusal, Vestibular, Lingual, Mesial, Distal) para alternar: <strong>Sano ➔ 🔴 Rojo (Caries/Requerido) ➔ 🔵 Azul (Obturado/Realizado)</strong>.
-        </p>
+  <div class="app-layout">
+    
+    <!-- LEFT COLUMN: 360 PATIENT PROFILE BENTO SIDEBAR -->
+    <aside class="patient-sidebar">
+      <div class="avatar-wrapper">
+        <div class="avatar-circle">CR</div>
+        <div class="patient-name" id="sidePatientName">Carlos Ramírez Gómez</div>
+        <div class="patient-meta" id="sidePatientDoc">CC 1.020.485.921 • 34 años</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Medellín, Antioquia</div>
+      </div>
 
-        <div class="odontogram-wrapper">
-          <div id="upperTitle" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA SUPERIOR</div>
-          <div class="dental-arch" id="upperArch"></div>
-
-          <div id="lowerTitle" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA INFERIOR</div>
-          <div class="dental-arch" id="lowerArch"></div>
-
-          <div class="legend">
-            <div class="legend-item"><div class="dot-red"></div> Rojo: Caries / Tratamiento Requerido</div>
-            <div class="legend-item"><div class="dot-blue"></div> Azul: Obturación / Tratamiento Realizado</div>
-          </div>
+      <!-- Critical Clinical Badges -->
+      <div class="alert-section">
+        <div class="widget-title">Alertas Médicas Críticas</div>
+        <div>
+          <span class="alert-badge">⚠️ Alergia a Penicilina</span>
+          <span class="alert-badge">⚠️ HTA Controlada</span>
+          <span class="tag-badge">🩸 O Positivo</span>
+          <span class="tag-badge">✨ Ortodoncia Digital</span>
         </div>
       </div>
-    </div>
 
-    <!-- PESTAÑA 2: PERIODONTOGRAMA DIGITAL -->
-    <div id="tab-perio" class="tab-content">
-      <div class="card">
-        <h2>Evaluación Periodontal (Sondaje en 6 Puntos Clínicos)</h2>
-        <div class="perio-kpi-grid">
-          <div class="perio-kpi">
-            <div class="perio-kpi-val" id="kpiBop">12.5%</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Índice de Sangrado al Sondaje (BOP)</div>
-          </div>
-          <div class="perio-kpi">
-            <div class="perio-kpi-val danger" id="kpiPockets">3</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Bolsas Periodontales ≥ 4 mm</div>
-          </div>
-          <div class="perio-kpi">
-            <div class="perio-kpi-val">1</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Afectación de Furca (Molar 16)</div>
-          </div>
+      <!-- Financial Status Widget -->
+      <div class="sidebar-widget">
+        <div class="widget-title">
+          <span>Presupuesto & Abonos</span>
+          <span style="color: var(--success); font-weight: 800;">64% Pagado</span>
         </div>
-
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-          Registro de 6 puntos por pieza (Mesio-Vestibular, Centro, Disto-Vestibular, Mesio-Lingual, Centro, Disto-Lingual). Los valores ≥ 4 mm se marcan en rojo automáticamente indicando bolsa periodontal activa:
-        </p>
-
-        <table class="perio-table">
-          <thead>
-            <tr>
-              <th>Diente FDI</th>
-              <th>Movilidad</th>
-              <th>Furca</th>
-              <th>Sondaje Vestibular (mm) [M - C - D]</th>
-              <th>BOP Vestibular (Sangrado)</th>
-              <th>Sondaje Lingual/Palatino (mm) [M - C - D]</th>
-              <th>BOP Lingual</th>
-              <th>Placa</th>
-            </tr>
-          </thead>
-          <tbody id="perioTableBody">
-            <tr>
-              <td><strong>16 (Molar Sup)</strong></td>
-              <td>Grado I</td>
-              <td>Grado I</td>
-              <td>
-                <input class="input-sondaje" value="3" />
-                <input class="input-sondaje" value="2" />
-                <input class="input-sondaje pocket" value="5" />
-              </td>
-              <td><input type="checkbox" class="bop-checkbox" checked /></td>
-              <td>
-                <input class="input-sondaje" value="2" />
-                <input class="input-sondaje" value="2" />
-                <input class="input-sondaje" value="3" />
-              </td>
-              <td><input type="checkbox" class="bop-checkbox" /></td>
-              <td><input type="checkbox" class="bop-checkbox" checked /></td>
-            </tr>
-            <tr>
-              <td><strong>21 (Incisivo Central)</strong></td>
-              <td>Grado 0</td>
-              <td>—</td>
-              <td>
-                <input class="input-sondaje" value="2" />
-                <input class="input-sondaje" value="2" />
-                <input class="input-sondaje" value="2" />
-              </td>
-              <td><input type="checkbox" class="bop-checkbox" /></td>
-              <td>
-                <input class="input-sondaje" value="2" />
-                <input class="input-sondaje" value="2" />
-                <input class="input-sondaje" value="2" />
-              </td>
-              <td><input type="checkbox" class="bop-checkbox" /></td>
-              <td><input type="checkbox" class="bop-checkbox" /></td>
-            </tr>
-          </tbody>
-        </table>
+        <div style="font-size: 0.85rem; display: flex; justify-content: space-between; margin-top: 0.2rem;">
+          <span style="color: var(--text-muted);">Abonado: <strong>$1.150.000 COP</strong></span>
+          <span style="color: var(--text-muted);">Total: <strong>$1.800.000</strong></span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: 64%;"></div>
+        </div>
       </div>
-    </div>
 
-    <!-- PESTAÑA 3: CONSENTIMIENTOS & FIRMA DIGITAL (LEY 527) -->
-    <div id="tab-consent" class="tab-content">
-      <div class="card">
-        <h2>Consentimiento Informado & Firma Digital en Pantalla</h2>
-        
-        <div class="consent-card">
-          <strong>DOCUMENTO CLÍNICO: CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE IMPLANTES Y CIRUGÍA GUIADA</strong><br>
-          Yo, en calidad de paciente, manifiesto que he sido informado de forma clara sobre el diagnóstico, la técnica quirúrgica mediante guía computarizada 3D, riesgos previsibles (inflamación, sangrado leve transitorio, molestias locales) y alternativas terapéuticas. Autorizo la realización del procedimiento de conformidad con la Ley 527 de 1999 de Colombia.
+      <!-- Next Appointment Widget -->
+      <div class="sidebar-widget">
+        <div class="widget-title">Próxima Cita</div>
+        <div style="font-size: 0.85rem; background: var(--primary-light); padding: 0.6rem 0.8rem; border-radius: 8px; border-left: 3px solid var(--primary);">
+          <strong style="color: var(--primary-dark);">📅 Hoy, 10:30 AM</strong><br>
+          <span style="color: var(--text); font-size: 0.8rem;">Dr. Alejandro Restrepo • Box 1 (Escáner 3D)</span><br>
+          <small style="color: var(--text-muted);">Control y entrega Alineador #4</small>
         </div>
+      </div>
 
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">Firma del Paciente (Dibuja con el mouse o dedo en pantalla táctil):</label>
+      <!-- Quick Action Buttons -->
+      <div class="quick-actions">
+        <button onclick="openNewEvolutionModal()">+ Registrar Evolución</button>
+        <button class="btn-secondary" onclick="openNewPhotoModal()">📸 Subir Foto Clínica</button>
+        <button class="btn-outline" onclick="switchTab('tab-rips')">🇨🇴 Generar RIPS JSON</button>
+      </div>
+    </aside>
+
+    <!-- RIGHT COLUMN: MAIN INTERACTIVE TABS & CLINICAL VIEWS -->
+    <main>
+      <div class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab('tab-timeline')">🕒 Línea de Tiempo 360°</button>
+        <button class="tab-btn" onclick="switchTab('tab-odontogram')">🦷 Odontograma FDI</button>
+        <button class="tab-btn" onclick="switchTab('tab-photos')">📸 Galería Fotográfica (Antes/Después)</button>
+        <button class="tab-btn" onclick="switchTab('tab-plans')">📋 Plan de Tratamiento (<span id="planCountBadge">2</span>)</button>
+        <button class="tab-btn" onclick="switchTab('tab-agenda')">📅 Agenda de Sillones</button>
+        <button class="tab-btn" onclick="switchTab('tab-perio')">📊 Periodontograma</button>
+        <button class="tab-btn" onclick="switchTab('tab-consent')">✍️ Consentimiento Digital</button>
+        <button class="tab-btn" onclick="switchTab('tab-rips')">🇨🇴 RIPS MinSalud</button>
+      </div>
+
+      <!-- TAB 1: INTERACTIVE CLINICAL TIMELINE -->
+      <section id="tab-timeline" class="tab-content active">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">🕒 Evolución Clínica & Eventos Médicos 360°</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Registro cronológico auditable con firmas digitales, anestesia y postoperatorios</p>
+            </div>
+            <button onclick="openNewEvolutionModal()">+ Nueva Evolución Clínica</button>
+          </div>
+
+          <div class="timeline" id="clinicalTimelineContainer">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Cargando línea de tiempo del paciente...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: INTERACTIVE ODONTOGRAM (ADULT & CHILD) -->
+      <section id="tab-odontogram" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">🦷 Odontograma FDI Bi-direccional</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Haz clic en una cara del diente para cambiar estado. Al marcar <strong>Rojo (Caries)</strong>, se vinculará directamente al plan de tratamiento.
+              </p>
+            </div>
+            <div class="dentition-switcher">
+              <button class="dentition-btn active" id="btnAdult" onclick="setDentition('permanente')">Adulto (11-48)</button>
+              <button class="dentition-btn" id="btnChild" onclick="setDentition('temporal')">Infantil (51-85)</button>
+            </div>
+          </div>
+
+          <div class="odontogram-wrapper">
+            <div id="upperTitle" style="font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA SUPERIOR</div>
+            <div class="dental-arch" id="upperArch"></div>
+
+            <div id="lowerTitle" style="font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; color: var(--primary-dark);">ARCADA INFERIOR</div>
+            <div class="dental-arch" id="lowerArch"></div>
+
+            <div class="legend">
+              <div class="legend-item"><div class="dot-red"></div> Rojo: Caries / Tratamiento Requerido (Agrega a Presupuesto)</div>
+              <div class="legend-item"><div class="dot-blue"></div> Azul: Obturación Realizada / Sano</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: CLINICAL PHOTO COMPARISON GALLERY -->
+      <section id="tab-photos" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">📸 Galería Fotográfica de Casos & Evolución Visual</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Comparativa fotográfica antes, progreso y después para ortodoncia y estética</p>
+            </div>
+            <button onclick="openNewPhotoModal()">+ Subir Registro Fotográfico</button>
+          </div>
+
+          <div class="gallery-grid" id="photosGridContainer">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Cargando galería clínica...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: TREATMENT PLANS & BUDGET -->
+      <section id="tab-plans" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">📋 Plan de Tratamiento Odontológico & Presupuesto CUPS</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Codificación oficial RIPS (CIE-10 & CUPS) valorizado en pesos colombianos (COP)</p>
+            </div>
+            <button onclick="openNewProcedureModal()">+ Agregar Procedimiento Manual</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Diente</th>
+                <th>Fase Clínica</th>
+                <th>Procedimiento</th>
+                <th>Código CUPS</th>
+                <th>CIE-10</th>
+                <th>Valor COP</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="treatmentPlanBody">
+              <tr>
+                <td><strong>16</strong> (Molar Sup. Der.)</td>
+                <td>Restaurativa</td>
+                <td>Obturación con resina de fotocurado tres o más superficies</td>
+                <td><code>232101</code></td>
+                <td><code>K021</code></td>
+                <td><strong>$140.000</strong></td>
+                <td><span style="background: var(--success-light); color: var(--success); padding: 3px 8px; border-radius: 9999px; font-weight: 700; font-size: 0.75rem;">Realizado</span></td>
+              </tr>
+              <tr>
+                <td><strong>21</strong> (Incisivo Central)</td>
+                <td>Estética / Ortodoncia</td>
+                <td>Alineador Invisible Taglus 3D (Fase nivelación)</td>
+                <td><code>890201</code></td>
+                <td><code>K072</code></td>
+                <td><strong>$1.660.000</strong></td>
+                <td><span style="background: var(--primary-light); color: var(--primary-dark); padding: 3px 8px; border-radius: 9999px; font-weight: 700; font-size: 0.75rem;">En Curso</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 5: AGENDA & SILLONES (BOXES) -->
+      <section id="tab-agenda" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">📅 Agenda Diaria por Sillón Dental (Boxes)</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Integrado con asistente IA de WhatsApp y flujo en recepción física</p>
+            </div>
+            <button onclick="openNewAppointmentModal()">+ Nueva Cita en Box</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Paciente</th>
+                <th>Especialista</th>
+                <th>Sillón / Box</th>
+                <th>Motivo de Consulta</th>
+                <th>Origen</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="agendaTableBody">
+              <tr><td colspan="8" style="text-align: center;">Cargando citas del día...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 6: PERIODONTOGRAMA -->
+      <section id="tab-perio" class="tab-content">
+        <div class="card">
+          <h2 class="card-title" style="margin-bottom: 0.5rem;">📊 Periodontograma Digital (Sondaje 6 Puntos)</h2>
+          <div class="perio-kpi-grid">
+            <div class="perio-kpi">
+              <div class="perio-kpi-val" id="kpiBop">12.5%</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Índice Sangrado al Sondaje (BOP)</div>
+            </div>
+            <div class="perio-kpi">
+              <div class="perio-kpi-val danger" id="kpiPockets">3</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Bolsas Periodontales ≥ 4 mm</div>
+            </div>
+            <div class="perio-kpi">
+              <div class="perio-kpi-val">1</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Afectación de Furca (Molar 16)</div>
+            </div>
+          </div>
+
+          <table style="text-align: center;">
+            <thead>
+              <tr>
+                <th>Diente FDI</th>
+                <th>Movilidad</th>
+                <th>Furca</th>
+                <th>Sondaje Vestibular (mm) [M - C - D]</th>
+                <th>BOP V.</th>
+                <th>Sondaje Lingual (mm) [M - C - D]</th>
+                <th>BOP L.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>16 (Molar Sup)</strong></td>
+                <td>Grado I</td>
+                <td>Grado I</td>
+                <td>
+                  <input class="input-sondaje" value="3" />
+                  <input class="input-sondaje" value="2" />
+                  <input class="input-sondaje pocket" value="5" />
+                </td>
+                <td><input type="checkbox" class="bop-checkbox" checked /></td>
+                <td>
+                  <input class="input-sondaje" value="2" />
+                  <input class="input-sondaje" value="2" />
+                  <input class="input-sondaje" value="3" />
+                </td>
+                <td><input type="checkbox" class="bop-checkbox" /></td>
+              </tr>
+              <tr>
+                <td><strong>21 (Incisivo)</strong></td>
+                <td>Grado 0</td>
+                <td>—</td>
+                <td>
+                  <input class="input-sondaje" value="2" />
+                  <input class="input-sondaje" value="2" />
+                  <input class="input-sondaje" value="2" />
+                </td>
+                <td><input type="checkbox" class="bop-checkbox" /></td>
+                <td>
+                  <input class="input-sondaje" value="2" />
+                  <input class="input-sondaje" value="2" />
+                  <input class="input-sondaje" value="2" />
+                </td>
+                <td><input type="checkbox" class="bop-checkbox" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 7: DIGITAL CONSENT (LEY 527) -->
+      <section id="tab-consent" class="tab-content">
+        <div class="card">
+          <h2 class="card-title" style="margin-bottom: 0.5rem;">✍️ Consentimiento Informado & Firma Digital en Pantalla</h2>
+          <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 1rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem;">
+            <strong>CONSENTIMIENTO INFORMADO PARA TRATAMIENTO DE IMPLANTES & ORTODONCIA DIGITAL:</strong><br>
+            Yo, Carlos Ramírez Gómez, autorizo de forma libre y consciente el procedimiento de rehabilitación guiada e instalación de alineadores. Certifico que he sido informado de riesgos, beneficios y cuidados postoperatorios bajo la Ley 527 de 1999 de Colombia.
+          </div>
+
+          <label style="font-weight: 700; font-size: 0.85rem; display: block; margin-bottom: 0.4rem;">Firma del Paciente (Dibuja con mouse o dedo táctil):</label>
           <div class="signature-pad-wrapper">
             <canvas id="sigCanvas"></canvas>
           </div>
-          <button onclick="saveConsent()">Guardar y Sellar Consentimiento</button>
-          <button class="btn-secondary" onclick="clearSignature()">Limpiar Firma</button>
-        </div>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <button onclick="saveConsent()">Guardar y Sellar Consentimiento Criptográfico</button>
+            <button class="btn-secondary" onclick="clearSignature()">Limpiar Firma</button>
+          </div>
 
-        <div id="consentHistory" style="margin-top: 1.5rem;">
-          <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Consentimientos Sellados del Paciente</h3>
-          <div id="consentList" style="font-size: 0.85rem; color: var(--text-muted);">Sin consentimientos previos en esta sesión.</div>
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem;">Consentimientos Históricos Sellados</h3>
+          <div id="consentList" style="font-size: 0.85rem; color: var(--text-muted);">Sin consentimientos previos registrados.</div>
+        </div>
+      </section>
+
+      <!-- TAB 8: RIPS JSON (RESOLUCIÓN 2275) -->
+      <section id="tab-rips" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">🇨🇴 Estructura RIPS Oficial (MinSalud Resolución 2275 de 2023)</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Generación en tiempo real del JSON exigido para radicación en el validador del Ministerio</p>
+            </div>
+            <button onclick="fetchRips()">Regenerar RIPS JSON</button>
+          </div>
+          <pre id="ripsJsonOutput">Cargando RIPS JSON...</pre>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: QUICK ODONTOGRAM TO BUDGET CONNECTION -->
+  <div class="modal-overlay" id="quickProcedureModal">
+    <div class="modal-card">
+      <h3 style="font-size: 1.1rem; margin-bottom: 0.4rem;">⚡ Hallazgo en Odontograma Detectado</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Marcaste caries en la pieza <strong id="modalToothNum">16</strong> (<span id="modalSurfaceName">Oclusal</span>). ¿Deseas agregarlo automáticamente al presupuesto y plan de tratamiento?
+      </p>
+
+      <div style="margin-bottom: 0.8rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Procedimiento Clínico Sugerido:</label>
+        <input id="modalProcedureName" value="Obturación con resina de fotocurado (Res. 2275)" />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600;">Código CUPS:</label>
+          <input id="modalCupsCode" value="232101" />
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600;">Valor COP:</label>
+          <input id="modalCostCop" type="number" value="140000" />
         </div>
       </div>
-    </div>
 
-    <!-- PESTAÑA 4: PACIENTE -->
-    <div id="tab-patient" class="tab-content">
-      <div class="card">
-        <h2>Ficha del Paciente & Antecedentes Médicos</h2>
-        <div id="patientDetails" style="font-size: 0.95rem; line-height: 1.8;">
-          Cargando datos del paciente...
-        </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button class="btn-secondary" onclick="closeQuickProcedureModal()">Omitir</button>
+        <button class="btn-success" onclick="confirmQuickProcedure()">✓ Agregar al Presupuesto</button>
       </div>
     </div>
+  </div>
 
-    <!-- PESTAÑA 5: PLANES DE TRATAMIENTO -->
-    <div id="tab-plans" class="tab-content">
-      <div class="card">
-        <h2>Presupuesto y Plan de Tratamiento por Fases</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Diente</th>
-              <th>Fase</th>
-              <th>Procedimiento</th>
-              <th>Código CUPS</th>
-              <th>CIE-10</th>
-              <th>Costo (COP)</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>16 (Molar Sup. Der.)</td>
-              <td>Restaurativa</td>
-              <td>Obturación con resina de fotocurado</td>
-              <td>232101</td>
-              <td>K021</td>
-              <td>$140.000</td>
-              <td><span style="color: #16a34a; font-weight: 600;">Finalizado</span></td>
-            </tr>
-            <tr>
-              <td>21 (Incisivo Central)</td>
-              <td>Estética</td>
-              <td>Alineador Invisible 3D (Set-up digital)</td>
-              <td>890201</td>
-              <td>K072</td>
-              <td>$160.000</td>
-              <td><span style="color: #0284c7; font-weight: 600;">En Curso</span></td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- MODAL: NEW EVOLUTION -->
+  <div class="modal-overlay" id="newEvolutionModal">
+    <div class="modal-card" style="max-width: 550px;">
+      <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">🩺 Nueva Evolución de Historia Clínica</h3>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600;">Odontólogo / Especialista:</label>
+          <input id="evoDoctor" value="Dr. Alejandro Restrepo" />
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600;">Especialidad:</label>
+          <select id="evoSpec">
+            <option value="Ortodoncia Digital">Ortodoncia Digital</option>
+            <option value="Rehabilitación & Estética">Rehabilitación & Estética</option>
+            <option value="Implantología Oral">Implantología Oral</option>
+            <option value="Odontología General">Odontología General</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 0.5rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Motivo de Evolución:</label>
+        <input id="evoMotivo" placeholder="Ej. Control de Alineador o Limpieza Ultrasonido" />
+      </div>
+
+      <div style="margin-bottom: 0.5rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Procedimiento y Notas Clínicas:</label>
+        <textarea id="evoProc" rows="3" placeholder="Describe los hallazgos y técnica realizada..."></textarea>
+      </div>
+
+      <div style="margin-bottom: 0.5rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Anestesia Utilizada (Opcional):</label>
+        <input id="evoAnestesia" placeholder="Ej. Lidocaína 2% con epinefrina (1 cárpule)" />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Indicaciones Postoperatorias:</label>
+        <input id="evoPostop" placeholder="Ej. Higiene oral estricta, seda dental, uso 22 hrs..." />
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button class="btn-secondary" onclick="closeEvolutionModal()">Cancelar</button>
+        <button onclick="saveEvolution()">Guardar Evolución</button>
       </div>
     </div>
+  </div>
 
-    <!-- PESTAÑA 6: RIPS JSON RESOLUCIÓN 2275 -->
-    <div id="tab-rips" class="tab-content">
-      <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h2>Estructura RIPS Oficial (MinSalud Colombia)</h2>
-          <button onclick="fetchRips()">Regenerar RIPS JSON</button>
-        </div>
-        <pre id="ripsJsonOutput">Cargando RIPS JSON...</pre>
+  <!-- MODAL: NEW PHOTO -->
+  <div class="modal-overlay" id="newPhotoModal">
+    <div class="modal-card">
+      <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">📸 Subir Registro Fotográfico Clínico</h3>
+      
+      <div style="margin-bottom: 0.5rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Tipo de Registro:</label>
+        <select id="photoTipo">
+          <option value="inicial_antes">Inicial / Antes del Tratamiento</option>
+          <option value="progreso">Control / En Progreso</option>
+          <option value="final_despues">Final / Después del Tratamiento</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 0.5rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Ángulo Clínico:</label>
+        <select id="photoAngulo">
+          <option value="frontal_sonrisa">Frontal Sonrisa</option>
+          <option value="intraoral_frontal">Intraoral Frontal en Oclusión</option>
+          <option value="perfil_derecho">Perfil Facial Derecho</option>
+          <option value="oclusal_superior">Oclusal Superior</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 0.5rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">URL de la Fotografía (o Imagen del Escáner):</label>
+        <input id="photoUrl" value="https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=600&q=80" />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="font-size: 0.8rem; font-weight: 600;">Notas Clínicas:</label>
+        <input id="photoNotas" placeholder="Ej. Alineación lograda en sector anterior..." />
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button class="btn-secondary" onclick="closePhotoModal()">Cancelar</button>
+        <button onclick="savePhoto()">Guardar Fotografía</button>
       </div>
     </div>
   </div>
 
   <script>
+    // TAB MANAGEMENT
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      event.target.classList.add('active');
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+      
+      // highlight active button
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+          btn.classList.add('active');
+        }
+      });
     }
 
-    // Denticiones Adulto (11 al 48) vs Infantil (51 al 85)
+    // ODONTOGRAMA LOGIC
     const adultUpper = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
     const adultLower = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
-    
     const childUpper = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
     const childLower = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
+
+    let pendingTooth = null;
+    let pendingSurface = null;
 
     function createToothHtml(num) {
       return `
         <div class="tooth-container">
           <span class="tooth-num">${num}</span>
           <div class="tooth-box" data-tooth="${num}">
-            <div class="surface vestibular" onclick="toggleSurface(this)"></div>
-            <div class="surface mesial" onclick="toggleSurface(this)"></div>
-            <div class="surface oclusal" onclick="toggleSurface(this)"></div>
-            <div class="surface distal" onclick="toggleSurface(this)"></div>
-            <div class="surface lingual" onclick="toggleSurface(this)"></div>
+            <div class="surface vestibular" onclick="onSurfaceClick(event, ${num}, 'Vestibular')"></div>
+            <div class="surface mesial" onclick="onSurfaceClick(event, ${num}, 'Mesial')"></div>
+            <div class="surface oclusal" onclick="onSurfaceClick(event, ${num}, 'Oclusal')"></div>
+            <div class="surface distal" onclick="onSurfaceClick(event, ${num}, 'Distal')"></div>
+            <div class="surface lingual" onclick="onSurfaceClick(event, ${num}, 'Lingual')"></div>
           </div>
         </div>
       `;
@@ -384,9 +1021,16 @@
       }
     }
 
-    function toggleSurface(el) {
+    function onSurfaceClick(e, toothNum, surfaceName) {
+      const el = e.target;
       if (!el.classList.contains('red') && !el.classList.contains('blue')) {
         el.classList.add('red');
+        // Trigger Bi-directional Connection to Treatment Plan
+        pendingTooth = toothNum;
+        pendingSurface = surfaceName;
+        document.getElementById('modalToothNum').innerText = toothNum;
+        document.getElementById('modalSurfaceName').innerText = surfaceName;
+        document.getElementById('quickProcedureModal').classList.add('active');
       } else if (el.classList.contains('red')) {
         el.classList.remove('red');
         el.classList.add('blue');
@@ -395,131 +1039,200 @@
       }
     }
 
-    setDentition('permanente');
-
-    // Canvas de Firma Digital (Ley 527)
-    const canvas = document.getElementById('sigCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 500;
-    canvas.height = 180;
-    let isDrawing = false;
-
-    function getCoords(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: (clientX - rect.left) * (canvas.width / rect.width),
-        y: (clientY - rect.top) * (canvas.height / rect.height)
-      };
+    function closeQuickProcedureModal() {
+      document.getElementById('quickProcedureModal').classList.remove('active');
     }
 
-    function startDraw(e) {
-      isDrawing = true;
-      const { x, y } = getCoords(e);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      e.preventDefault();
-    }
+    async function confirmQuickProcedure() {
+      const proc = document.getElementById('modalProcedureName').value;
+      const cups = document.getElementById('modalCupsCode').value;
+      const cost = document.getElementById('modalCostCop').value;
 
-    function draw(e) {
-      if (!isDrawing) return;
-      const { x, y } = getCoords(e);
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      e.preventDefault();
-    }
-
-    function stopDraw() { isDrawing = false; }
-
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDraw);
-    canvas.addEventListener('touchstart', startDraw);
-    canvas.addEventListener('touchmove', draw);
-    canvas.addEventListener('touchend', stopDraw);
-
-    function clearSignature() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    async function saveConsent() {
-      const dataUrl = canvas.toDataURL();
-      const res = await fetch('/api/consents/1', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tipoProcedimiento: 'Cirugía de Implantes',
-          contenidoTexto: 'Autorizo la realización del procedimiento de cirugía guiada e implantes.',
-          riesgosInformados: ['Inflamación local', 'Molestias postoperatorias'],
-          firmaDigitalBase64: dataUrl
-        })
-      });
-      const result = await res.json();
-      if (result.success) {
-        alert('✅ Consentimiento firmado y sellado criptográficamente con éxito.');
-        loadConsents();
-        clearSignature();
+      try {
+        const res = await fetch('/api/quick-procedure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patientId: '1',
+            dienteFdi: pendingTooth,
+            procedimiento: `${proc} (${pendingSurface})`,
+            cupsCode: cups,
+            costoCop: Number(cost)
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Append row to Treatment Plan table
+          const tbody = document.getElementById('treatmentPlanBody');
+          const newRow = document.createElement('tr');
+          newRow.innerHTML = `
+            <td><strong>${pendingTooth}</strong></td>
+            <td>Restaurativa</td>
+            <td>${proc} (${pendingSurface})</td>
+            <td><code>${cups}</code></td>
+            <td><code>K021</code></td>
+            <td><strong>$${Number(cost).toLocaleString('es-CO')}</strong></td>
+            <td><span style="background: var(--warning-light); color: var(--warning); padding: 3px 8px; border-radius: 9999px; font-weight: 700; font-size: 0.75rem;">Presupuestado</span></td>
+          `;
+          tbody.appendChild(newRow);
+          document.getElementById('planCountBadge').innerText = data.totalCount + 2;
+          closeQuickProcedureModal();
+          alert(`✅ ¡Procedimiento agregado al Plan de Tratamiento para la pieza ${pendingTooth}!`);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
 
-    async function loadConsents() {
+    // LOAD TIMELINE EVENTS
+    async function loadTimeline() {
       try {
-        const res = await fetch('/api/consents/1');
-        const list = await res.json();
-        const container = document.getElementById('consentList');
-        if (list.length === 0) {
-          container.innerHTML = 'Sin consentimientos previos registrados.';
+        const res = await fetch('/api/timeline/1');
+        const timeline = await res.json();
+        const container = document.getElementById('clinicalTimelineContainer');
+        if (!timeline || timeline.length === 0) {
+          container.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-muted);">Sin eventos clínicos en el historial.</div>';
           return;
         }
-        container.innerHTML = list.map(c => `
-          <div style="background: #f8fafc; border: 1px solid var(--border); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
-            <strong>${c.tipoProcedimiento}</strong> • Firmado el ${new Date(c.fechaHoraFirma).toLocaleString('es-CO')}<br>
-            <small style="color: var(--text-muted); word-break: break-all;">Hash Criptográfico SHA-256: ${c.hashIntegridad}</small>
-          </div>
-        `).join('');
-      } catch (e) {}
-    }
 
-    // Cargar Paciente y RIPS
-    async function loadPatient() {
-      try {
-        const res = await fetch('/api/patients');
-        const data = await res.json();
-        if (data.length > 0) {
-          const p = data[0];
-          document.getElementById('patientDetails').innerHTML = `
-            <strong>Nombre:</strong> ${p.nombres} ${p.apellidos} <br>
-            <strong>Identificación:</strong> ${p.tipoDocumento} ${p.numeroDocumento} <br>
-            <strong>Teléfono WhatsApp:</strong> ${p.telefono} <br>
-            <strong>Ciudad / Sede:</strong> ${p.ciudad} (${p.direccion}) <br>
-            <strong>Aseguradora / EPS:</strong> ${p.epsAseguradora} <br>
-            <strong>Contacto Emergencia:</strong> ${p.contactoEmergencia.nombre} (${p.contactoEmergencia.parentesco} - ${p.contactoEmergencia.telefono})
+        container.innerHTML = timeline.map(event => {
+          let extraHtml = '';
+          if (event.detallesExtra) {
+            if (event.detallesExtra.anestesia) {
+              extraHtml += `<div style="font-size: 0.78rem; color: #475569; margin-top: 4px;">💉 <strong>Anestesia:</strong> ${event.detallesExtra.anestesia}</div>`;
+            }
+            if (event.detallesExtra.postop) {
+              extraHtml += `<div style="font-size: 0.78rem; color: #166534; background: #f0fdf4; padding: 4px 8px; border-radius: 4px; margin-top: 6px;">📋 <strong>Postoperatorio:</strong> ${event.detallesExtra.postop}</div>`;
+            }
+          }
+
+          return `
+            <div class="timeline-item">
+              <div class="timeline-icon">${event.icono || '🩺'}</div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <div style="font-weight: 700; font-size: 0.9rem; color: var(--text);">${event.titulo}</div>
+                  <span class="timeline-badge" style="background: ${event.colorBadge || 'var(--primary)'};">${event.fecha}</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #334155; line-height: 1.5;">${event.descripcion}</div>
+                ${event.profesional ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">👨‍⚕️ ${event.profesional}</div>` : ''}
+                ${extraHtml}
+              </div>
+            </div>
           `;
-        }
-      } catch (e) {}
+        }).join('');
+      } catch (e) {
+        console.error(e);
+      }
     }
 
-    async function fetchRips() {
+    // MODAL EVOLUTION
+    function openNewEvolutionModal() {
+      document.getElementById('newEvolutionModal').classList.add('active');
+    }
+    function closeEvolutionModal() {
+      document.getElementById('newEvolutionModal').classList.remove('active');
+    }
+    async function saveEvolution() {
+      const doc = document.getElementById('evoDoctor').value;
+      const spec = document.getElementById('evoSpec').value;
+      const motivo = document.getElementById('evoMotivo').value;
+      const proc = document.getElementById('evoProc').value;
+      const anestesia = document.getElementById('evoAnestesia').value;
+      const postop = document.getElementById('evoPostop').value;
+
+      if (!motivo || !proc) {
+        alert('Por favor completa el motivo y las notas del procedimiento.');
+        return;
+      }
+
+      await fetch('/api/evolutions/1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          odontologo: doc,
+          especialidad: spec,
+          motivoEvolucion: motivo,
+          procedimientoRealizado: proc,
+          anestesiaUtilizada: anestesia,
+          indicacionesPostoperatorias: postop
+        })
+      });
+
+      closeEvolutionModal();
+      loadTimeline();
+      alert('✅ Evolución clínica guardada exitosamente.');
+    }
+
+    // CLINICAL PHOTO GALLERY
+    async function loadPhotos() {
       try {
-        const res = await fetch('/api/rips/generate/1');
-        const json = await res.json();
-        document.getElementById('ripsJsonOutput').innerText = JSON.stringify(json, null, 2);
-      } catch (e) {}
+        const res = await fetch('/api/photos/1');
+        const list = await res.json();
+        const container = document.getElementById('photosGridContainer');
+        if (!list || list.length === 0) {
+          container.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-muted);">Sin fotografías registradas.</div>';
+          return;
+        }
+
+        container.innerHTML = list.map(photo => {
+          let tagClass = photo.tipo;
+          let tagLabel = photo.tipo.replace('_', ' ').toUpperCase();
+
+          return `
+            <div class="photo-card">
+              <img src="${photo.url}" alt="${photo.notas || 'Foto Clínica'}" onerror="this.src='https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=600&q=80'" />
+              <div class="photo-info">
+                <span class="photo-tag ${tagClass}">${tagLabel}</span>
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text);">${photo.angulo.replace('_', ' ').toUpperCase()}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${photo.fecha}</div>
+                <div style="font-size: 0.8rem; color: #334155; margin-top: 4px;">${photo.notas || ''}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error(e);
+      }
     }
 
-    // Cargar Agenda de Citas
+    function openNewPhotoModal() {
+      document.getElementById('newPhotoModal').classList.add('active');
+    }
+    function closePhotoModal() {
+      document.getElementById('newPhotoModal').classList.remove('active');
+    }
+    function savePhoto() {
+      const tipo = document.getElementById('photoTipo').value;
+      const angulo = document.getElementById('photoAngulo').value;
+      const url = document.getElementById('photoUrl').value;
+      const notas = document.getElementById('photoNotas').value;
+
+      const container = document.getElementById('photosGridContainer');
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+      card.innerHTML = `
+        <img src="${url}" alt="${notas}" onerror="this.src='https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=600&q=80'" />
+        <div class="photo-info">
+          <span class="photo-tag ${tipo}">${tipo.replace('_', ' ').toUpperCase()}</span>
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text);">${angulo.replace('_', ' ').toUpperCase()}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${new Date().toISOString().split('T')[0]}</div>
+          <div style="font-size: 0.8rem; color: #334155; margin-top: 4px;">${notas}</div>
+        </div>
+      `;
+      container.prepend(card);
+      closePhotoModal();
+      alert('✅ Fotografía clínica registrada en la galería.');
+    }
+
+    // AGENDA APPOINTMENTS
     async function loadAppointments() {
       try {
         const res = await fetch('/api/appointments');
         const list = await res.json();
         const tbody = document.getElementById('agendaTableBody');
-        
-        if (list.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">No hay citas registradas para hoy.</td></tr>';
+        if (!list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay citas registradas para hoy.</td></tr>';
           return;
         }
 
@@ -529,22 +1242,21 @@
           let label = apt.estado;
 
           if (apt.estado === 'confirmada_whatsapp') {
-            badgeColor = '#15803d'; badgeBg = '#dcfce7'; label = 'Confirmada por WhatsApp';
+            badgeColor = '#15803d'; badgeBg = '#dcfce7'; label = 'Confirmada WhatsApp';
           } else if (apt.estado === 'en_sala_espera') {
             badgeColor = '#0369a1'; badgeBg = '#e0f2fe'; label = 'En Sala de Espera';
           } else if (apt.estado === 'en_atencion') {
-            badgeColor = '#b45309'; badgeBg = '#fef3c7'; label = 'En Atención (Sillón)';
+            badgeColor = '#b45309'; badgeBg = '#fef3c7'; label = 'En Sillón';
           } else if (apt.estado === 'finalizada') {
             badgeColor = '#475569'; badgeBg = '#e2e8f0'; label = 'Finalizada';
           }
 
-          const originLabel = apt.origen === 'whatsapp_ia' ? '🤖 WhatsApp Bot (Sofía)' : '🏢 Recepción';
+          const originLabel = apt.origen === 'whatsapp_ia' ? '🤖 WhatsApp Bot' : '🏢 Recepción';
 
           return `
             <tr>
               <td><strong>${apt.horaInicio}</strong></td>
               <td>${apt.patientName}</td>
-              <td><small>${apt.patientPhone}</small></td>
               <td>${apt.especialista}</td>
               <td><span style="font-weight: 600; color: var(--primary);">${apt.boxSillon}</span></td>
               <td>${apt.motivoConsulta}</td>
@@ -555,7 +1267,7 @@
                 </span>
               </td>
               <td>
-                <select onchange="updateAppointmentStatus('${apt.id}', this.value)" style="font-size: 0.8rem; padding: 2px 4px; border-radius: 4px; border: 1px solid var(--border);">
+                <select onchange="updateAppointmentStatus('${apt.id}', this.value)" style="font-size: 0.75rem; padding: 2px 4px; border-radius: 4px;">
                   <option value="" disabled selected>Cambiar estado...</option>
                   <option value="en_sala_espera">En Sala de Espera</option>
                   <option value="en_atencion">Pasar al Sillón</option>
@@ -584,9 +1296,9 @@
       const name = prompt('Nombre del paciente:');
       if (!name) return;
       const phone = prompt('Teléfono WhatsApp:', '+57300');
-      const time = prompt('Hora de la cita (ej. 14:00):', '14:00');
+      const time = prompt('Hora de la cita (ej. 15:30):', '15:30');
       const box = prompt('Sillón / Box:', 'Box 1 - Escáner 3D');
-      const motivo = prompt('Motivo de consulta:', 'Valoración General');
+      const motivo = prompt('Motivo de consulta:', 'Control Periodoncia');
 
       await fetch('/api/appointments', {
         method: 'POST',
@@ -608,10 +1320,129 @@
       loadAppointments();
     }
 
-    loadPatient();
-    fetchRips();
-    loadConsents();
+    // SIGNATURE PAD (LEY 527)
+    const canvas = document.getElementById('sigCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 500;
+    canvas.height = 160;
+    let isDrawing = false;
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      const { x, y } = getCoords(e);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      e.preventDefault();
+    }
+    function draw(e) {
+      if (!isDrawing) return;
+      const { x, y } = getCoords(e);
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      e.preventDefault();
+    }
+    function stopDraw() { isDrawing = false; }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDraw);
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    async function saveConsent() {
+      const dataUrl = canvas.toDataURL();
+      const res = await fetch('/api/consents/1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipoProcedimiento: 'Cirugía de Implantes & Ortodoncia',
+          contenidoTexto: 'Autorizo la realización del procedimiento de cirugía guiada e implantes.',
+          riesgosInformados: ['Inflamación local', 'Molestias postoperatorias transitorias'],
+          firmaDigitalBase64: dataUrl
+        })
+      });
+      const result = await res.json();
+      if (result.success) {
+        alert('✅ Consentimiento firmado y sellado criptográficamente bajo Ley 527.');
+        loadConsents();
+        clearSignature();
+        loadTimeline();
+      }
+    }
+
+    async function loadConsents() {
+      try {
+        const res = await fetch('/api/consents/1');
+        const list = await res.json();
+        const container = document.getElementById('consentList');
+        if (!list || list.length === 0) {
+          container.innerHTML = 'Sin consentimientos previos registrados.';
+          return;
+        }
+        container.innerHTML = list.map(c => `
+          <div style="background: #f8fafc; border: 1px solid var(--border); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
+            <strong>${c.tipoProcedimiento}</strong> • Firmado el ${new Date(c.fechaHoraFirma).toLocaleString('es-CO')}<br>
+            <small style="color: var(--text-muted); word-break: break-all;">Hash Criptográfico SHA-256: ${c.hashIntegridad}</small>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    // RIPS JSON GENERATOR
+    async function fetchRips() {
+      try {
+        const res = await fetch('/api/rips/generate/1');
+        const json = await res.json();
+        document.getElementById('ripsJsonOutput').innerText = JSON.stringify(json, null, 2);
+      } catch (e) {}
+    }
+
+    function openNewProcedureModal() {
+      const proc = prompt('Nombre del procedimiento:');
+      if (!proc) return;
+      const cups = prompt('Código CUPS:', '232101');
+      const cost = prompt('Costo COP:', '150000');
+      const tooth = prompt('Pieza dental (FDI):', '16');
+
+      const tbody = document.getElementById('treatmentPlanBody');
+      const newRow = document.createElement('tr');
+      newRow.innerHTML = `
+        <td><strong>${tooth}</strong></td>
+        <td>Rehabilitación</td>
+        <td>${proc}</td>
+        <td><code>${cups}</code></td>
+        <td><code>K021</code></td>
+        <td><strong>$${Number(cost).toLocaleString('es-CO')}</strong></td>
+        <td><span style="background: var(--warning-light); color: var(--warning); padding: 3px 8px; border-radius: 9999px; font-weight: 700; font-size: 0.75rem;">Presupuestado</span></td>
+      `;
+      tbody.appendChild(newRow);
+    }
+
+    // INITIALIZATION
+    setDentition('permanente');
+    loadTimeline();
+    loadPhotos();
     loadAppointments();
+    loadConsents();
+    fetchRips();
   </script>
 </body>
 </html>

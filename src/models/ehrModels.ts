@@ -132,9 +132,34 @@ export interface ClinicalEvolution {
   patientId: string;
   fecha: string;
   odontologo: string;
+  especialidad: string;
   motivoEvolucion: string;
   procedimientoRealizado: string;
   anestesiaUtilizada?: string;
   indicacionesPostoperatorias: string;
   firmaProfesional: string;
+  dienteFdi?: number;
 }
+
+export interface ClinicalPhoto {
+  id: string;
+  patientId: string;
+  fecha: string;
+  tipo: 'inicial_antes' | 'progreso' | 'final_despues';
+  angulo: 'frontal_sonrisa' | 'intraoral_frontal' | 'perfil_derecho' | 'oclusal_superior';
+  url: string;
+  notas?: string;
+}
+
+export interface PatientTimelineEvent {
+  id: string;
+  tipo: 'evolucion' | 'cita' | 'consentimiento' | 'pago' | 'plan_tratamiento';
+  titulo: string;
+  descripcion: string;
+  fecha: string;
+  profesional?: string;
+  icono?: string;
+  colorBadge?: string;
+  detallesExtra?: any;
+}
+

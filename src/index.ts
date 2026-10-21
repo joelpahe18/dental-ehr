@@ -8,7 +8,10 @@ import {
   OdontogramState, 
   PeriodontogramState, 
   InformedConsent, 
-  TreatmentPlanItem 
+  TreatmentPlanItem,
+  ClinicalEvolution,
+  ClinicalPhoto,
+  PatientTimelineEvent
 } from './models/ehrModels.js';
 import { RipsService } from './services/ripsService.js';
 
@@ -90,6 +93,66 @@ const odontograms: Map<string, OdontogramState> = new Map();
 const periodontograms: Map<string, PeriodontogramState> = new Map();
 const informedConsents: Map<string, InformedConsent[]> = new Map();
 const treatmentPlans: Map<string, TreatmentPlanItem[]> = new Map();
+
+// In-Memory Evoluciones Clínicas
+const clinicalEvolutions: Map<string, ClinicalEvolution[]> = new Map([
+  [
+    '1',
+    [
+      {
+        id: 'evo-1',
+        patientId: '1',
+        fecha: '2026-10-15 10:30',
+        odontologo: 'Dr. Alejandro Restrepo',
+        especialidad: 'Ortodoncia Digital',
+        motivoEvolucion: 'Control de Alineador #3',
+        procedimientoRealizado: 'Verificación de ataches vestibulares. Buen tracking dental. Se entrega kit de alineadores #4 y #5 con láminas Taglus de bioprecisión.',
+        indicacionesPostoperatorias: 'Uso estricto de 22 horas diarias. Retirar solo para comer y cepillarse.',
+        firmaProfesional: 'Dr. Alejandro Restrepo - Reg. Med. 05-4921'
+      },
+      {
+        id: 'evo-2',
+        patientId: '1',
+        fecha: '2026-09-20 09:00',
+        odontologo: 'Dra. Claudia Mejía',
+        especialidad: 'Implantología Oral',
+        motivoEvolucion: 'Cirugía Guiada Molar 16',
+        procedimientoRealizado: 'Colocación de implante de titanio guiado por tomografía 3D (CBCT + STL). Sin colgajo extenso, ajuste milimétrico mediante casquillo.',
+        anestesiaUtilizada: 'Lidocaína 2% con epinefrina (2 cárpules)',
+        indicacionesPostoperatorias: 'Gasa de compresión por 45 minutos. Frío local 15 min on/off las primeras 24 horas. Dieta blanda.',
+        firmaProfesional: 'Dra. Claudia Mejía - Reg. Med. 05-8832',
+        dienteFdi: 16
+      }
+    ]
+  ]
+]);
+
+// In-Memory Galería Fotográfica Clínica
+const clinicalPhotos: Map<string, ClinicalPhoto[]> = new Map([
+  [
+    '1',
+    [
+      {
+        id: 'photo-1',
+        patientId: '1',
+        fecha: '2026-08-01',
+        tipo: 'inicial_antes',
+        angulo: 'frontal_sonrisa',
+        url: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=600&q=80',
+        notas: 'Estado inicial previo a alineadores (apiñamiento anteroinferior)'
+      },
+      {
+        id: 'photo-2',
+        patientId: '1',
+        fecha: '2026-10-15',
+        tipo: 'progreso',
+        angulo: 'frontal_sonrisa',
+        url: 'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=600&q=80',
+        notas: 'Avance tras 2 meses con alineadores (expansión y nivelación lograda)'
+      }
+    ]
+  ]
+]);
 
 // Estado de Salud
 app.get('/health', (req: Request, res: Response) => {
@@ -347,6 +410,128 @@ app.patch('/api/appointments/:id/status', (req: Request, res: Response) => {
   existing.estado = estado;
   appointments.set(id, existing);
   res.json({ success: true, appointment: existing });
+});
+
+// ==========================================
+// MÓDULO 8: EVOLUCIONES CLÍNICAS & TIMELINE INTERACTIVO
+// ==========================================
+app.get('/api/evolutions/:patientId', (req: Request, res: Response) => {
+  const patientId = String(req.params.patientId);
+  const evos = clinicalEvolutions.get(patientId) || [];
+  res.json(evos);
+});
+
+app.post('/api/evolutions/:patientId', (req: Request, res: Response) => {
+  const patientId = String(req.params.patientId);
+  const data = req.body;
+  const newEvo: ClinicalEvolution = {
+    id: `evo-${Date.now()}`,
+    patientId,
+    fecha: new Date().toISOString().replace('T', ' ').substring(0, 16),
+    odontologo: data.odontologo || 'Dr. Alejandro Restrepo',
+    especialidad: data.especialidad || 'Odontología General',
+    motivoEvolucion: data.motivoEvolucion || 'Control clínico',
+    procedimientoRealizado: data.procedimientoRealizado || '',
+    anestesiaUtilizada: data.anestesiaUtilizada,
+    indicacionesPostoperatorias: data.indicacionesPostoperatorias || '',
+    firmaProfesional: data.firmaProfesional || 'Dr. Tratante - Reg. Med. 05-4921',
+    dienteFdi: data.dienteFdi
+  };
+
+  const list = clinicalEvolutions.get(patientId) || [];
+  list.unshift(newEvo);
+  clinicalEvolutions.set(patientId, list);
+
+  res.status(201).json({ success: true, evolution: newEvo });
+});
+
+// Endpoint unificado de Timeline (Citas, Evoluciones, Consentimientos)
+app.get('/api/timeline/:patientId', (req: Request, res: Response) => {
+  const patientId = String(req.params.patientId);
+  const timeline: PatientTimelineEvent[] = [];
+
+  // Evoluciones
+  const evos = clinicalEvolutions.get(patientId) || [];
+  evos.forEach(e => {
+    timeline.push({
+      id: e.id,
+      tipo: 'evolucion',
+      titulo: `${e.motivoEvolucion} ${e.dienteFdi ? `(Pieza ${e.dienteFdi})` : ''}`,
+      descripcion: e.procedimientoRealizado,
+      fecha: e.fecha,
+      profesional: `${e.odontologo} (${e.especialidad})`,
+      icono: '🩺',
+      colorBadge: '#0284c7',
+      detallesExtra: {
+        anestesia: e.anestesiaUtilizada,
+        postop: e.indicacionesPostoperatorias
+      }
+    });
+  });
+
+  // Citas agendadas
+  const apts = Array.from(appointments.values()).filter(a => a.patientId === patientId);
+  apts.forEach(a => {
+    timeline.push({
+      id: a.id,
+      tipo: 'cita',
+      titulo: `Cita: ${a.motivoConsulta}`,
+      descripcion: `Sillón: ${a.boxSillon} • Estado: ${a.estado.replace('_', ' ').toUpperCase()}`,
+      fecha: `${a.fecha} ${a.horaInicio}`,
+      profesional: a.especialista,
+      icono: '📅',
+      colorBadge: a.estado === 'confirmada_whatsapp' ? '#16a34a' : '#eab308'
+    });
+  });
+
+  // Consentimientos
+  const consents = informedConsents.get(patientId) || [];
+  consents.forEach(c => {
+    timeline.push({
+      id: c.id,
+      tipo: 'consentimiento',
+      titulo: `Consentimiento Firmado: ${c.tipoProcedimiento}`,
+      descripcion: `Sello digital de integridad SHA-256: ${c.hashIntegridad.substring(0, 16)}...`,
+      fecha: c.fechaHoraFirma.replace('T', ' ').substring(0, 16),
+      icono: '✍️',
+      colorBadge: '#8b5cf6'
+    });
+  });
+
+  // Ordenar de más reciente a más antiguo
+  timeline.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+  res.json(timeline);
+});
+
+// ==========================================
+// MÓDULO 9: GALERÍA FOTOGRÁFICA CLÍNICA
+// ==========================================
+app.get('/api/photos/:patientId', (req: Request, res: Response) => {
+  const patientId = String(req.params.patientId);
+  const photos = clinicalPhotos.get(patientId) || [];
+  res.json(photos);
+});
+
+// Endpoint para vincular hallazgo de odontograma con plan de tratamiento
+app.post('/api/quick-procedure', (req: Request, res: Response) => {
+  const { patientId, dienteFdi, procedimiento, cupsCode, cie10Diagnostic, costoCop } = req.body;
+  const list = treatmentPlans.get(String(patientId)) || [];
+  
+  const newItem: TreatmentPlanItem = {
+    id: `item-${Date.now()}`,
+    dienteFdi: Number(dienteFdi),
+    fase: 'restaurativa',
+    procedimiento: procedimiento || 'Procedimiento Odontológico',
+    cupsCode: cupsCode || '232101',
+    cie10Diagnostic: cie10Diagnostic || 'K021',
+    costoCop: Number(costoCop) || 140000,
+    estado: 'presupuestado'
+  };
+
+  list.push(newItem);
+  treatmentPlans.set(String(patientId), list);
+
+  res.status(201).json({ success: true, item: newItem, totalCount: list.length });
 });
 
 app.listen(port, () => {
